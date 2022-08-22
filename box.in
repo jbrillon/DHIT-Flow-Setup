@@ -1,0 +1,59 @@
+0                     ; 0 - Generate velocity; 1 - Extract spectrum
+4                    ; Grid size in elements
+5                     ; Polynomial degree of the elements
+c-------------- Generation of velocity ------------------
+4                     ; Number of modes to take from file with input spectrum
+energy.prf            ; input file: File with input spectrum
+velocity.fld          ; output file: File with generated 3D velocity field
+c-------------- Extraction of spectrum    ------------------
+7                     ; Number of modes in the output spectrum
+spec.tec              ; output file: File with output spectrum
+velocity.fld          ; input file: File with input 3D velocity field
+
+c-----------------------------------------------------
+
+1. Computational domain: cube, (2*Pi)**3, with periodic
+                         boundary conditions imposed at
+                         all the boundaries;
+
+2. Size of grid:
+
+   0.0                              2*Pi
+   *------*-------*.........*--------*
+   1      2       3        N-1       N
+
+      N = 16, 32, 64 .....  (2**n)
+
+
+3. Number of modes (wave numbers, k) in input/output spectra:
+    grid 16**3: maximum 7
+    grid 32**3: maximum 15
+    grid 64**3: maximum 31
+
+4. File with input spectrum (energy.prf):
+
+           65  (number of lines)
+   0.0000E+00  0.0000E+00    (k, E)
+   1.0000E+00  6.1625E-03    (k, E)
+   2.0000E+00  2.7265E-02    (k, E)
+   ......................
+
+   The file is read in a free format.
+
+5. File with output spectrum (spec.tec ) :
+
+   0.0000E+00  0.0000E+00    (k, E)
+   1.0000E+00  6.1625E-03    (k, E)
+   2.0000E+00  2.7265E-02    (k, E)
+   ......................
+
+5. Input/output file with velocity field (velocity.fld)
+   is an unformatted file created by Fortran as follows:
+
+      do k = 1, N, 1
+        do j = 1, N, 1
+          do i = 1, N, 1
+            write(fw) U(i,j,k), V(i,j,k), W(i,j,k)
+          enddo
+        enddo
+      enddo
