@@ -13,58 +13,62 @@ np.savetxt("reference_data.dat",raw_data)
 nValues_per_row = 6
 reordered_data = np.zeros((nDOF,nValues_per_row))
 
-nElements = 4
+nElements_per_direction = 4
+nElements = nElements_per_direction*nElements_per_direction*nElements_per_direction
 poly_degree = 5
 nQuadPoints_per_element = poly_degree + 1
-nQuadPoints = nQuadPoints_per_element*nElements
+nQuadPoints = nQuadPoints_per_element*nElements_per_direction
 
-stored_data = np.zeros((nQuadPoints,nQuadPoints,nQuadPoints,1,nValues_per_row))
+stored_data = np.zeros((nElements_per_direction,nElements_per_direction,nElements_per_direction,nQuadPoints_per_element,nQuadPoints_per_element,nQuadPoints_per_element,1,nValues_per_row))
 
 file = open("read_test.dat","w")
 # file.write('Number of degrees of freedom:\n')
 wstr = "%i\n" % nDOF
 file.write(wstr)
 i = 0
-for qz in range(0,nQuadPoints):
-    for qy in range(0,nQuadPoints):
-        for qx in range(0,nQuadPoints):
-            row_data = raw_data[i,:]
-            for iValue in range(0,nValues_per_row):
-                stored_data[qz,qy,qx,0,iValue] = row_data[iValue]
+for ez in range(0,nElements_per_direction):
+    for qz in range(0,nQuadPoints_per_element):
+        for ey in range(0,nElements_per_direction):
+            for qy in range(0,nQuadPoints_per_element):
+                for ex in range(0,nElements_per_direction):
+                    for qx in range(0,nQuadPoints_per_element):
+                        row_data = raw_data[i,:]
+                        for iValue in range(0,nValues_per_row):
+                            stored_data[ez,ey,ex,qz,qy,qx,0,iValue] = row_data[iValue]
 
-            wstr = "%18.16e %18.16e %18.16e %18.16e %18.16e %18.16e\n" % \
-                    (stored_data[qz,qy,qx,0,0],stored_data[qz,qy,qx,0,1],\
-                        stored_data[qz,qy,qx,0,2],stored_data[qz,qy,qx,0,3],\
-                        stored_data[qz,qy,qx,0,4],stored_data[qz,qy,qx,0,5])
-            # wstr = "%18.16e %18.16e %18.16e %18.16e %18.16e %18.16e\n" % (row_data[0],row_data[1],row_data[2],row_data[3],row_data[4],row_data[5])
-            file.write(wstr)
-            i += 1
+                        wstr = "%18.16e %18.16e %18.16e %18.16e %18.16e %18.16e\n" % \
+                                (stored_data[ez,ey,ex,qz,qy,qx,0,0],stored_data[ez,ey,ex,qz,qy,qx,0,1],\
+                                    stored_data[ez,ey,ex,qz,qy,qx,0,2],stored_data[ez,ey,ex,qz,qy,qx,0,3],\
+                                    stored_data[ez,ey,ex,qz,qy,qx,0,4],stored_data[ez,ey,ex,qz,qy,qx,0,5])
+                        # wstr = "%18.16e %18.16e %18.16e %18.16e %18.16e %18.16e\n" % (row_data[0],row_data[1],row_data[2],row_data[3],row_data[4],row_data[5])
+                        file.write(wstr)
+                        i += 1
 file.close()
 
 
-file = open("reordered_data.dat","w")
-# file.write('Number of degrees of freedom:\n')
-wstr = "%i\n" % nDOF
-file.write(wstr)
-i = 0
-for el in range(0,nElements):
-    index_start = el*nQuadPoints_per_element
-    index_end = (el+1)*nQuadPoints_per_element
-    for qz in range(index_start,nQuadPoints):
+# file = open("reordered_data.dat","w")
+# # file.write('Number of degrees of freedom:\n')
+# wstr = "%i\n" % nDOF
+# file.write(wstr)
+# i = 0
+# for el in range(0,nElements):
+#     index_start = el*nQuadPoints_per_element
+#     index_end = (el+1)*nQuadPoints_per_element
+#     for qz in range(index_start,nQuadPoints):
     
 
-    for qy in range(0,nQuadPoints):
-        for qx in range(0,nQuadPoints):
+#     for qy in range(0,nQuadPoints):
+#         for qx in range(0,nQuadPoints):
 
-            wstr = "%18.16e %18.16e %18.16e %18.16e %18.16e %18.16e\n" % \
-                    (stored_data[qz,qy,qx,0,0],stored_data[qz,qy,qx,0,1],\
-                        stored_data[qz,qy,qx,0,2],stored_data[qz,qy,qx,0,3],\
-                        stored_data[qz,qy,qx,0,4],stored_data[qz,qy,qx,0,5])
-            row_data = raw_data[i,:]
-            wstr = "%18.16e %18.16e %18.16e %18.16e %18.16e %18.16e\n" % (row_data[0],row_data[1],row_data[2],row_data[3],row_data[4],row_data[5])
-            file.write(wstr)
-            i += 1
-file.close()
+#             wstr = "%18.16e %18.16e %18.16e %18.16e %18.16e %18.16e\n" % \
+#                     (stored_data[qz,qy,qx,0,0],stored_data[qz,qy,qx,0,1],\
+#                         stored_data[qz,qy,qx,0,2],stored_data[qz,qy,qx,0,3],\
+#                         stored_data[qz,qy,qx,0,4],stored_data[qz,qy,qx,0,5])
+#             row_data = raw_data[i,:]
+#             wstr = "%18.16e %18.16e %18.16e %18.16e %18.16e %18.16e\n" % (row_data[0],row_data[1],row_data[2],row_data[3],row_data[4],row_data[5])
+#             file.write(wstr)
+#             i += 1
+# file.close()
 
 
 
