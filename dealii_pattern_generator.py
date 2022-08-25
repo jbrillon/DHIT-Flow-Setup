@@ -59,7 +59,7 @@ file.close()
 file = open(data_dir + "pattern_check.dat","w")
 
 nLoops = 3
-loop_bounds = np.zeros(nLoops,dtype=np.int64)
+loop_bounds = np.ones(nLoops,dtype=np.int64)
 
 if(nElements_per_direction>=4):
     loop_bounds[0] = 2
@@ -77,6 +77,11 @@ if(nElements_per_direction>=16):
 #     loop_bounds[6] = 2
 # if(nElements_per_direction>=512):
 #     loop_bounds[7] = 2
+
+''' must add more nested for loops for higher
+    number of elements per direction
+    currently can handle up to 16 (i.e. 2,4,8,16)
+'''
 
 ez_L_base_base = 0
 for z_base_base in range(0,loop_bounds[2]):
