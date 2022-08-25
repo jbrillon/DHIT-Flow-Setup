@@ -28,10 +28,7 @@ def get_element_index(p1,p2):
             return el
     return -1
 
-file = open(data_dir + "pattern_test.dat","w")
-# # file.write('Number of degrees of freedom:\n')
-# wstr = "%i\n" % nDOF
-# file.write(wstr)
+file = open(data_dir + "pattern_gen.dat","w")
 ibase = 0
 for p in range(0,nPatternLines):
     point1 = np.zeros(3)
@@ -45,10 +42,6 @@ for p in range(0,nPatternLines):
     point2[0] = data[ibase+1,0]
     point2[1] = data[ibase+nQuadPoints_per_element,1]
     point2[2] = data[ibase+nQuadPoints_per_element*nQuadPoints_per_element,2]
-    
-    if(p==22):
-        print(point1)
-        print(point2)
 
     for d in range(0,3):
         wstr = "%i " % get_element_index(point1[d],point2[d])
@@ -56,6 +49,27 @@ for p in range(0,nPatternLines):
     wstr = "\n"
     file.write(wstr)
     ibase += nLines_per_pattern
+file.close()
 
-# i += 1
+file = open(data_dir + "pattern_check.dat","w")
+ibase = 0
+for p in range(0,nPatternLines):
+    point1 = np.zeros(3)
+    point2 = np.zeros(3)
+    
+    # point1 for determining pattern
+    for d in range(0,3):
+        point1[d] = data[ibase,d]
+    
+    # point2 for determining pattern
+    point2[0] = data[ibase+1,0]
+    point2[1] = data[ibase+nQuadPoints_per_element,1]
+    point2[2] = data[ibase+nQuadPoints_per_element*nQuadPoints_per_element,2]
+
+    for d in range(0,3):
+        wstr = "%i " % get_element_index(point1[d],point2[d])
+        file.write(wstr)
+    wstr = "\n"
+    file.write(wstr)
+    ibase += nLines_per_pattern
 file.close()
