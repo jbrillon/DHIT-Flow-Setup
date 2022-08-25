@@ -6,8 +6,8 @@ import numpy as np
 # for i in range(1,npoints):
 #   print(x[i]-x[i-1])
 
-# nDOF = np.loadtxt("setup.dat",max_rows=1,dtype='int')
-nDOF = 13824
+nDOF = np.loadtxt("setup.dat",max_rows=1,dtype='int')
+# nDOF = 13824 # for python 2.7
 raw_data = np.loadtxt("setup.dat",skiprows=1,dtype=np.float64)
 np.savetxt("reference_data.dat",raw_data)
 nValues_per_row = 6
