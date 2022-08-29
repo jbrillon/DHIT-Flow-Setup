@@ -3,8 +3,8 @@ import numpy as np
 data_dir = "philip_outputs/1procs/"
 
 global nElements_per_direction
-nElements_per_direction = 16
-poly_degree = 2
+nElements_per_direction = 4
+poly_degree = 5
 nQuadPoints_per_element = poly_degree+1
 nLines_per_pattern = nQuadPoints_per_element*nQuadPoints_per_element*nQuadPoints_per_element
 nElements_total = nElements_per_direction*nElements_per_direction*nElements_per_direction
