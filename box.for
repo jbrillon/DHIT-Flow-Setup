@@ -333,7 +333,7 @@
          external FourierFun
 
           eps = 1.0D-15
-          mk_max = real(num_f) + 0.5D0
+          mk_max = dble(num_f) + 0.5D0
           szf    = 2*num_f + 1
           iran = 1
           do nf1 = 0, num_f, 1
@@ -449,7 +449,7 @@ c            write(*, *) nf1
          Nj3 = ne
          Nk3 = ne
 
-         dh = (2.0 * Pi_const)/real(ne)
+         dh = (2.0 * Pi_const)/dble(ne)
 
          do k = Nk1, Nk3, 1
          do j = Nj1, Nj3, 1
@@ -604,56 +604,58 @@ c            write(*, *) nf1
          pp = p+1
 
          !CARTESIAN GRIDPOINTS
-         coeff1(1,1) = -1.000000000000e+00
-         coeff1(1,2) = +1.000000000000e+00
+         coeff1(1,1) = -1.0000000000000000e+00
+         coeff1(1,2) = +1.0000000000000000e+00
 
-         coeff1(2,1) = -1.000000000000e+00
-         coeff1(2,2) = +0.000000000000e+00
-         coeff1(2,3) = +1.000000000000e+00
+         coeff1(2,1) = -1.0000000000000000e+00
+         coeff1(2,2) = +0.0000000000000000e+00
+         coeff1(2,3) = +1.0000000000000000e+00
 
-         coeff1(3,1) = -1.000000000000e+00
-         coeff1(3,2) = -4.472135955000e-01
-         coeff1(3,3) = +4.472135955000e-01
-         coeff1(3,4) = +1.000000000000e+00
+         coeff1(3,1) = -1.0000000000000000e+00
+         coeff1(3,2) = -4.47213595499957939e-01
+         coeff1(3,3) = +4.47213595499957939e-01
+         coeff1(3,4) = +1.0000000000000000e+00
 
-         coeff1(4,1) = -1.000000000000e+00
-         coeff1(4,2) = -6.546536707080e-01
-         coeff1(4,3) = +0.000000000000e+00
-         coeff1(4,4) = +6.546536707080e-01
-         coeff1(4,5) = +1.000000000000e+00
+         coeff1(4,1) = -1.0000000000000000e+00
+         coeff1(4,2) = -6.54653670707977144e-01
+         coeff1(4,3) = +0.0000000000000000e+00
+         coeff1(4,4) = +6.54653670707977144e-01
+         coeff1(4,5) = +1.0000000000000000e+00
 
-         coeff1(5,1) = -1.000000000000e+00
-         coeff1(5,2) = -7.650553239295e-01
-         coeff1(5,3) = -2.852315164806e-01
-         coeff1(5,4) = +2.852315164806e-01
-         coeff1(5,5) = +7.650553239295e-01
-         coeff1(5,6) = +1.000000000000e+00
+         coeff1(5,1) = -1.0000000000000000e+00
+         coeff1(5,2) = -7.6505532392946469e-01
+         !coeff1(5,3) = -2.852315164806e-01
+         coeff1(5,3) = -2.85231516480645096e-01
+         !coeff1(5,4) = +2.852315164806e-01
+         coeff1(5,4) = +2.85231516480645096e-01
+         coeff1(5,5) = +7.6505532392946469e-01
+         coeff1(5,6) = +1.0000000000000000e+00
 
          !OUTPUT GRIDPOINTS
-         coeff2(1,1) = -1.000000000000e+00
-         coeff2(1,2) = +1.000000000000e+00
+         coeff2(1,1) = -1.0000000000000000e+00
+         coeff2(1,2) = +1.0000000000000000e+00
 
-         coeff2(2,1) = -1.000000000000e+00
-         coeff2(2,2) = +0.000000000000e+00
-         coeff2(2,3) = +1.000000000000e+00
+         coeff2(2,1) = -1.0000000000000000e+00
+         coeff2(2,2) = +0.0000000000000000e+00
+         coeff2(2,3) = +1.0000000000000000e+00
 
-         coeff2(3,1) = -1.000000000000e+00
-         coeff2(3,2) = -3.333333333333e-01
-         coeff2(3,3) = +3.333333333333e-01
-         coeff2(3,4) = +1.000000000000e+00
+         coeff2(3,1) = -1.0000000000000000e+00
+         coeff2(3,2) = -3.3333333333333333e-01
+         coeff2(3,3) = +3.3333333333333333e-01
+         coeff2(3,4) = +1.0000000000000000e+00
 
-         coeff2(4,1) = -1.000000000000e+00
-         coeff2(4,2) = -5.000000000000e-01
-         coeff2(4,3) = +0.000000000000e+00
-         coeff2(4,4) = +5.000000000000e-01
-         coeff2(4,5) = +1.000000000000e+00
+         coeff2(4,1) = -1.0000000000000000e+00
+         coeff2(4,2) = -5.0000000000000000e-01
+         coeff2(4,3) = +0.0000000000000000e+00
+         coeff2(4,4) = +5.0000000000000000e-01
+         coeff2(4,5) = +1.0000000000000000e+00
 
-         coeff2(5,1) = -1.000000000000e+00
-         coeff2(5,2) = -6.000000000000e-01
-         coeff2(5,3) = -2.000000000000e-01
-         coeff2(5,4) = +2.000000000000e-01
-         coeff2(5,5) = +6.000000000000e-01
-         coeff2(5,6) = +1.000000000000e+00
+         coeff2(5,1) = -1.0000000000000000e+00
+         coeff2(5,2) = -6.0000000000000000e-01
+         coeff2(5,3) = -2.0000000000000000e-01
+         coeff2(5,4) = +2.0000000000000000e-01
+         coeff2(5,5) = +6.0000000000000000e-01
+         coeff2(5,6) = +1.0000000000000000e+00
 
           if( ng .Gt. MaxG ) then
             write(*,*) ' Error : incorrect size of grid'
@@ -670,7 +672,7 @@ c            write(*, *) nf1
           Nj3 = ne
           Nk3 = ne
 
-          dh = (2.0 * Pi_const)/real(ne)
+          dh = (2.0 * Pi_const)/dble(ne)
 
           do k = Nk1, Nk3, 1
           do j = Nj1, Nj3, 1
@@ -679,27 +681,27 @@ c            write(*, *) nf1
             do m = 1, pp, 1
             do n = 1, pp, 1
               
-              ri = real(i)
-              rj = real(j)
-              rk = real(k)
-              rl = real(l)
-              rm = real(m)
-              rn = real(n)
-              rp = real(p)
+              ri = dble(i)
+              rj = dble(j)
+              rk = dble(k)
+              rl = dble(l)
+              rm = dble(m)
+              rn = dble(n)
+              rp = dble(p)
 
               indi = (i-1)*pp+l
               indj = (j-1)*pp+m
               indk = (k-1)*pp+n
 
               !At Cartesian Points
-              Xg(indi,indj,indk) = (ri-1)*dh+(coeff2(p,l)+1)/2*dh;
-              Yg(indi,indj,indk) = (rj-1)*dh+(coeff2(p,m)+1)/2*dh;
-              Zg(indi,indj,indk) = (rk-1)*dh+(coeff2(p,n)+1)/2*dh;
+              Xg(indi,indj,indk) = dble(ri-1)*dh + (coeff2(p,l)+1)/2*dh;
+              Yg(indi,indj,indk) = dble(rj-1)*dh + (coeff2(p,m)+1)/2*dh;
+              Zg(indi,indj,indk) = dble(rk-1)*dh + (coeff2(p,n)+1)/2*dh;
 
               !At Solution Points
-              Xs(indi,indj,indk) = (ri-1)*dh+(coeff1(p,l)+1)/2*dh;
-              Ys(indi,indj,indk) = (rj-1)*dh+(coeff1(p,m)+1)/2*dh;
-              Zs(indi,indj,indk) = (rk-1)*dh+(coeff1(p,n)+1)/2*dh;
+              Xs(indi,indj,indk) = dble(ri-1)*dh + (coeff1(p,l)+1)/2*dh;
+              Ys(indi,indj,indk) = dble(rj-1)*dh + (coeff1(p,m)+1)/2*dh;
+              Zs(indi,indj,indk) = dble(rk-1)*dh + (coeff1(p,n)+1)/2*dh;
 
             enddo
             enddo
@@ -708,7 +710,7 @@ c            write(*, *) nf1
           enddo
           enddo
 
-          VolBox = real((Ni2-Ni1)*(Nj2-Nj1)*(Nk2-Nk1))
+          VolBox = dble((Ni2-Ni1)*(Nj2-Nj1)*(Nk2-Nk1))
           Ngrd   = 3
 
           else
@@ -723,18 +725,18 @@ c            write(*, *) nf1
           Ni2 = ng
           Nj2 = ng
           Nk2 = ng
-          dh = (2.0 * Pi_const)/real(ng - 1)
+          dh = (2.0 * Pi_const)/dble(ng - 1)
           do k = Nk1, Nk2, 1
           do j = Nj1, Nj2, 1
           do i = Ni1, Ni2, 1
-            Xg(i,j,k) = real(i-1) * dh
-            Yg(i,j,k) = real(j-1) * dh
-            Zg(i,j,k) = real(k-1) * dh
+            Xg(i,j,k) = dble(i-1) * dh
+            Yg(i,j,k) = dble(j-1) * dh
+            Zg(i,j,k) = dble(k-1) * dh
           enddo
           enddo
           enddo
 
-          VolBox = real((Ni2-Ni1)*(Nj2-Nj1)*(Nk2-Nk1))
+          VolBox = dble((Ni2-Ni1)*(Nj2-Nj1)*(Nk2-Nk1))
           Ngrd   = 3
 
           endif
