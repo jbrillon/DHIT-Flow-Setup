@@ -6,12 +6,46 @@ import numpy as np
 # for i in range(1,npoints):
 #   print(x[i]-x[i-1])
 
-nDOF = np.loadtxt("setup.dat",max_rows=1,dtype='int')
-# nDOF = 13824 # for python 2.7
+def get_conservative_from_primitive(primitive_soln):
+    global gamma_gas_minus_one
+    density = 1.0*primitive_soln[0]
+    velocity = 1.0*primitive_soln[1:4]
+    pressure = 1.0*primitive_soln[4]
+
+    conservative_soln = np.zeros(5,dtype=np.float64)
+    conservative_soln[0] = 1.0*density
+    conservative_soln[1:4] = density*velocity
+    conservative_soln[4] = pressure/(gamma_gas_minus_one) + 0.5*density*np.dot(velocity,velocity)
+    return conservative_soln
+
+# Constants
+characteristic_length = 1.0 # L
+
+# Global constants
+global gamma_gas, gamma_gas_minus_one
+gamma_gas = 1.4
+gamma_gas_minus_one = 0.4
+
+# TO DO: Read in setup_more.dat and assign the following variables
+freestream_velocity = 1.0
+freestream_mach_number = 1.0
+eddy_turnover_time = 1.0
+
+# TO DO: discuss with Brian the proper nondimensionalization
+#        since the Navier-Stokes equations themselves have to
+#        be initialized with nondimensionalized values based
+#        on freestream quantities
+
+# Determine final time for PHiLiP
+nondimensional_eddy_turnover_time = eddy_turnover_time/(L/freestream_velocity)
+nondimensionalized_density = 1.0
+nondimensionalized_pressure = 1.0
+
+# nDOF = np.loadtxt("setup.dat",max_rows=1,dtype='int')
+nDOF = 13824 # for python 2.7
 raw_data = np.loadtxt("setup.dat",skiprows=1,dtype=np.float64)
 np.savetxt("reference_data.dat",raw_data)
 nValues_per_row = 6
-reordered_data = np.zeros((nDOF,nValues_per_row))
 
 nElements_per_direction = 4
 nElements = nElements_per_direction*nElements_per_direction*nElements_per_direction
@@ -19,7 +53,8 @@ poly_degree = 5
 nQuadPoints_per_element = poly_degree + 1
 nQuadPoints = nQuadPoints_per_element*nElements_per_direction
 
-stored_data = np.zeros((nElements_per_direction,nElements_per_direction,nElements_per_direction,nQuadPoints_per_element,nQuadPoints_per_element,nQuadPoints_per_element,1,nValues_per_row))
+stored_data = np.zeros((nElements_per_direction,nElements_per_direction,nElements_per_direction,nQuadPoints_per_element,nQuadPoints_per_element,nQuadPoints_per_element,1,nValues_per_row),dtype=np.float64)
+nondimensionalized_conservative_solution = np.zeros((nElements_per_direction,nElements_per_direction,nElements_per_direction,nQuadPoints_per_element,nQuadPoints_per_element,nQuadPoints_per_element,1,5),dtype=np.float64)
 
 file = open("read_test.dat","w")
 # file.write('Number of degrees of freedom:\n')
@@ -40,9 +75,27 @@ for ez in range(0,nElements_per_direction):
                                 (stored_data[ez,ey,ex,qz,qy,qx,0,0],stored_data[ez,ey,ex,qz,qy,qx,0,1],\
                                     stored_data[ez,ey,ex,qz,qy,qx,0,2],stored_data[ez,ey,ex,qz,qy,qx,0,3],\
                                     stored_data[ez,ey,ex,qz,qy,qx,0,4],stored_data[ez,ey,ex,qz,qy,qx,0,5])
-                        # wstr = "%18.16e %18.16e %18.16e %18.16e %18.16e %18.16e\n" % (row_data[0],row_data[1],row_data[2],row_data[3],row_data[4],row_data[5])
                         file.write(wstr)
                         i += 1
+
+                        # ------------------------------ START -------------------------------
+                        # ON THE FLY PRE-PROCESSING
+                        # --------------------------------------------------------------------
+                        # Primitive solution at current point
+                        nondimensionalized_primitive_sol_at_q_point = np.array(5,dtype=np.float64)
+                        nondimensionalized_primitive_sol_at_q_point[0] = nondimensionalized_density
+                        nondimensionalized_primitive_sol_at_q_point[4] = nondimensionalized_pressure
+                        # -- Apply freestream non-dimensionalization to velocity components
+                        nondimensionalized_primitive_sol_at_q_point[1] = stored_data[ez,ey,ex,qz,qy,qx,0,3]/freestream_velocity
+                        nondimensionalized_primitive_sol_at_q_point[2] = stored_data[ez,ey,ex,qz,qy,qx,0,4]/freestream_velocity
+                        nondimensionalized_primitive_sol_at_q_point[3] = stored_data[ez,ey,ex,qz,qy,qx,0,5]/freestream_velocity
+
+                        # Conservative solution at current point
+                        nondimensionalized_conservative_sol_at_q_point = 1.0*get_conservative_from_primitive(nondimensionalized_primitive_sol_at_q_point)
+                        # Store conservative solution
+                        for state in range(0,5):
+                            nondimensionalized_conservative_solution[ez,ey,ex,qz,qy,qx,0,state] = 1.0*nondimensionalized_conservative_sol_at_q_point[state]
+                        # ------------------------------- END --------------------------------
 file.close()
 
 #===========================================================
@@ -50,6 +103,7 @@ file.close()
 #===========================================================
 
 file = open("reordered_data.dat","w")
+file_for_philip = open("setup_philip.dat","w")
 
 nLoops = 3
 loop_bounds = np.ones(nLoops,dtype=np.int64)
@@ -88,7 +142,7 @@ for z_base_base in range(0,loop_bounds[2]):
                 for y_base in range(0,loop_bounds[1]):
                     ex_L_base = ex_L_base_base
                     for x_base in range(0,loop_bounds[1]):
-                        # algorithm for a cube with 64 (4^3) elements
+                        # algorithm for a cube with 64 (4^3) elements:
                         ez_L = ez_L_base
                         for cz in range(0,loop_bounds[0]):
                             ez_R = ez_L + 1
@@ -113,6 +167,16 @@ for z_base_base in range(0,loop_bounds[2]):
                                                                     (stored_data[ez,ey,ex,qz,qy,qx,0,0],stored_data[ez,ey,ex,qz,qy,qx,0,1],\
                                                                         stored_data[ez,ey,ex,qz,qy,qx,0,2])
                                                             file.write(wstr)
+                                                for state in range(0,5):
+                                                    for qz in range(0,nQuadPoints_per_element):
+                                                        for qy in range(0,nQuadPoints_per_element):
+                                                            for qx in range(0,nQuadPoints_per_element):
+                                                                wstr2 = "%18.16e %18.16e %18.16e %18.16e \n" % \
+                                                                        (stored_data[ez,ey,ex,qz,qy,qx,0,0],\
+                                                                            stored_data[ez,ey,ex,qz,qy,qx,0,1],\
+                                                                            stored_data[ez,ey,ex,qz,qy,qx,0,2],\
+                                                                            nondimensionalized_conservative_solution[ez,ey,ex,qz,qy,qx,0,state])
+                                                                file_for_philip.write(wstr2)
                                     ex_L += 2
                                 ey_L += 2
                             ez_L += 2
@@ -124,7 +188,9 @@ for z_base_base in range(0,loop_bounds[2]):
     ez_L_base_base = ez_L_base
 
 file.close()
+file_for_philip.close()
 
+# check that it works
 
 data_dir = "philip_outputs/1procs/"
 filename="coord_check_%i_elements_p%i-proc_0.txt" % (nElements_per_direction,poly_degree)
@@ -137,58 +203,9 @@ for i in range(0,nDOF):
     check = reordered_data[i,:]
     ref = philip_data[i,:]
     err = np.linalg.norm(check-ref)
-    if(err > 1.0e-12):
+    if(err > 2.0e-15):
         err_msg = "%i %18.16e \n" % (i,err)
         file.write(err_msg)
 
 file.close()
-
-# file = open("reordered_data.dat","w")
-# # file.write('Number of degrees of freedom:\n')
-# wstr = "%i\n" % nDOF
-# file.write(wstr)
-# i = 0
-# for el in range(0,nElements):
-#     index_start = el*nQuadPoints_per_element
-#     index_end = (el+1)*nQuadPoints_per_element
-#     for qz in range(index_start,nQuadPoints):
-    
-
-#     for qy in range(0,nQuadPoints):
-#         for qx in range(0,nQuadPoints):
-
-#             wstr = "%18.16e %18.16e %18.16e %18.16e %18.16e %18.16e\n" % \
-#                     (stored_data[qz,qy,qx,0,0],stored_data[qz,qy,qx,0,1],\
-#                         stored_data[qz,qy,qx,0,2],stored_data[qz,qy,qx,0,3],\
-#                         stored_data[qz,qy,qx,0,4],stored_data[qz,qy,qx,0,5])
-#             row_data = raw_data[i,:]
-#             wstr = "%18.16e %18.16e %18.16e %18.16e %18.16e %18.16e\n" % (row_data[0],row_data[1],row_data[2],row_data[3],row_data[4],row_data[5])
-#             file.write(wstr)
-#             i += 1
-# file.close()
-
-
-
-# nQuadPoints = poly_degree + 1
-# for q2 in range(0,nQuadPoints*nElements):
-#     print("==================================================")
-    
-#     for q1 in range(0,nQuadPoints):
-#         print("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
-#         for el in range(0,nElements):
-#             # index of raw data
-#             row_index_start = q2*(nQuadPoints*(nElements*nQuadPoints)) + q1*(nElements*nQuadPoints) + el*nQuadPoints
-#             row_index_end = row_index_start + nQuadPoints
-#             raw_values = raw_data[row_index_start:(row_index_end),:]
-
-#             print(raw_values[:,0:3])
-#             print("--------------------------------------------")
-
-#             # index of reordered data
-#             # row_index_start_reordered_data = el*(3*nQuadPoints) + d*nQuadPoints
-#             # row_index_end_reordered_data = row_index_start_reordered_data + nQuadPoints
-
-#             # reordered_data[row_index_start_reordered_data:(row_index_end_reordered_data),:] = raw_values
-
-# # np.savetxt("reordered_data.dat", reordered_data, fmt='%.18e', delimiter=' ')
         
