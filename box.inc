@@ -40,7 +40,7 @@
      ,                      NumK,
      ,                      NumKout
 
-          real *8
+          real *16
      ,                      Pi_const,
      ,                      K_max,
      ,                      VolBox,

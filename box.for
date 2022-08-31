@@ -37,7 +37,8 @@
             stop
           endif
 
-          Pi_const = 3.14159265358979323846D0
+C           Pi_const = 3.14159265358979323846D0
+          Pi_const = 3.141592653589793115998D0
           call GenerGrid( ng, p , set_read)
 
           if( set_read .Eq. 1 ) then
@@ -60,11 +61,11 @@
 
         subroutine VelFun( mk, vk, ik, lf, iran )
          include 'box.inc'
-         real *8 mk, vk(*)
+         real *16 mk, vk(*)
          integer ik, lf, iran
          integer i, j, k
-         real *8 dv(3), arg, ang, fcos
-         real *8 Random, norm
+         real *16 dv(3), arg, ang, fcos
+         real *16 Random, norm
          integer n
 
           ang = Random(iran)*2.0*Pi_const
@@ -88,10 +89,10 @@
 
         subroutine AmpFun( mk, vk, ik, lf, iran )
          include 'box.inc'
-         real *8 mk, vk(*)
+         real *16 mk, vk(*)
          integer ik, lf, iran
          integer n, type
-         real *8 Random, GaussRandom
+         real *16 Random, GaussRandom
 
           type = 1
           do n = 1, Ngrd, 1
@@ -107,9 +108,9 @@
 
         subroutine DivFun( mk, vk, ik, lf, iran )
          include 'box.inc'
-         real *8 mk, vk(*)
+         real *16 mk, vk(*)
          integer ik, lf, iran
-         real *8 dd, sum, am(3)
+         real *16 dd, sum, am(3)
          integer n, m
 
           do n = 1, Ngrd, 1
@@ -128,9 +129,9 @@
 
         subroutine AmpNormFun( mk, vk, ik, lf, iran )
          include 'box.inc'
-         real *8 mk, vk(*)
+         real *16 mk, vk(*)
          integer ik, lf, iran
-         real *8 tmp
+         real *16 tmp
          integer n
 
           do n = 1, Ngrd, 1
@@ -141,9 +142,9 @@
 
         subroutine DivNormFun( mk, vk, ik, lf, iran )
          include 'box.inc'
-         real *8 mk, vk(*)
+         real *16 mk, vk(*)
          integer ik, lf, iran
-         real *8 tmp
+         real *16 tmp
          integer n
 
           tmp = sqrt(2.0D0/DivNorm(ik))
@@ -155,9 +156,9 @@
 
         subroutine CountFun( mk, vk, ik, lf, iran )
          include 'box.inc'
-         real *8 mk, vk(*)
+         real *16 mk, vk(*)
          integer ik, lf, iran
-         real *8 sum
+         real *16 sum
          integer n
 
           sum = 0.0
@@ -234,7 +235,7 @@
         subroutine InitFourier( num )
          include 'box.inc'
          integer num, k, n1, n2, n
-         real *8 rk, rk1, rk2, e1, e2, sum
+         real *16 rk, rk1, rk2, e1, e2, sum
 
           if(Kin(1).Gt.0.5D0) then
             write(*,*)  'Error: incorrect energy profiles'
@@ -275,11 +276,11 @@
 
         subroutine SpectrumFun( mk, vk, ik, lf, iran )
          include 'box.inc'
-         real *8 mk, vk(*)
+         real *16 mk, vk(*)
          integer i, j, k
          integer ik, lf, iran, n
-         real *8 sum_r(3), sum_i(3)
-         real *8 vl, tmp, fcos, fsin, arg
+         real *16 sum_r(3), sum_i(3)
+         real *16 vl, tmp, fcos, fsin, arg
 
           do n = 1, Ngrd, 1
             sum_r(n) = 0.0
@@ -309,7 +310,7 @@
         subroutine Spectrum( )
          include 'box.inc'
          integer k
-         real *8 tmp
+         real *16 tmp
          external SpectrumFun
 
           do k = 0, NumKout, 1
@@ -329,7 +330,7 @@
          integer num_f
          integer nf1, nf2, nf3
          integer szf, lf, iran, ik
-         real *8 mk_max, mk, vk(3), rk, eps
+         real *16 mk_max, mk, vk(3), rk, eps
          external FourierFun
 
           eps = 1.0D-15
@@ -365,10 +366,10 @@ c            write(*, *) nf1
 
 
         function Random( code )
-         real *8 Random
+         real *16 Random
          integer code
          integer n1, n2, n3
-         real *8 rm
+         real *16 rm
 
           n1 = 714025
           n2 = 1366
@@ -380,9 +381,9 @@ c            write(*, *) nf1
         end
 
         function GaussRandom( code )
-         real *8 GaussRandom, Random
+         real *16 GaussRandom, Random
          integer code
-         real *8 rr, v1, v2
+         real *16 rr, v1, v2
 
           rr = 2.0
           do while( rr .Gt. 1.0 )
@@ -431,9 +432,9 @@ c            write(*, *) nf1
          integer ng, i, j, k, l, m, n, ne, pp, p, set_read
          integer ll, mm, nn, o
          integer Ni3, Nj3, Nk3, indi, indj, indk
-         real *8 dh, ri rj, rk, rl, rm, rn, rp
-         real *8 X1, Y1, Z1, X2, Y2, Z2, wx, wy, wz
-         real *8 Xo, Yo, Zo, U2, V2, W2
+         real *16 dh, ri rj, rk, rl, rm, rn, rp
+         real *16 X1, Y1, Z1, X2, Y2, Z2, wx, wy, wz
+         real *16 Xo, Yo, Zo, U2, V2, W2
          character*(*) FileName
 
          !CONVERT FROM CARTESIAN GRID TO THE SOLUTION GRID
@@ -579,7 +580,7 @@ c            write(*, *) nf1
         subroutine WriteSpectrum( FileName  )
          include 'box.inc'
          integer fw, k
-         real *8 rk
+         real *16 rk
          character*(*) FileName
 
           fw = 12
@@ -595,67 +596,67 @@ c            write(*, *) nf1
          include 'box.inc'
          integer ng, i, j, k, l, m, n, ne, pp, p, set_read
          integer Ni3, Nj3, Nk3, indi, indj, indk
-         real *8 dh, ri rj, rk, rl, rm, rn, rp
-         real *8, DIMENSION(5, 6) :: coeff1
-         real *8, DIMENSION(5, 6) :: coeff2
+         real *16 dh, ri rj, rk, rl, rm, rn, rp
+         real *16, DIMENSION(5, 6) :: coeff1
+         real *16, DIMENSION(5, 6) :: coeff2
 
          if(set_read.Eq.0) then
          ne = ng/(p+1)
          pp = p+1
 
          !CARTESIAN GRIDPOINTS
-         coeff1(1,1) = -1.0000000000000000e+00
-         coeff1(1,2) = +1.0000000000000000e+00
+         coeff1(1,1) = -1.0000000000000000D0
+         coeff1(1,2) = +1.0000000000000000D0
 
-         coeff1(2,1) = -1.0000000000000000e+00
-         coeff1(2,2) = +0.0000000000000000e+00
-         coeff1(2,3) = +1.0000000000000000e+00
+         coeff1(2,1) = -1.0000000000000000D0
+         coeff1(2,2) = +0.0000000000000000D0
+         coeff1(2,3) = +1.0000000000000000D0
 
-         coeff1(3,1) = -1.0000000000000000e+00
-         coeff1(3,2) = -4.47213595499957939e-01
-         coeff1(3,3) = +4.47213595499957939e-01
-         coeff1(3,4) = +1.0000000000000000e+00
+         coeff1(3,1) = -1.0000000000000000D0
+         coeff1(3,2) = -4.47213595499957939D-1
+         coeff1(3,3) = +4.47213595499957939D-1
+         coeff1(3,4) = +1.0000000000000000D0
 
-         coeff1(4,1) = -1.0000000000000000e+00
-         coeff1(4,2) = -6.54653670707977144e-01
-         coeff1(4,3) = +0.0000000000000000e+00
-         coeff1(4,4) = +6.54653670707977144e-01
-         coeff1(4,5) = +1.0000000000000000e+00
+         coeff1(4,1) = -1.0000000000000000D0
+         coeff1(4,2) = -6.54653670707977144D-1
+         coeff1(4,3) = +0.0000000000000000D0
+         coeff1(4,4) = +6.54653670707977144D-1
+         coeff1(4,5) = +1.0000000000000000D0
 
-         coeff1(5,1) = -1.0000000000000000e+00
-         coeff1(5,2) = -7.6505532392946469e-01
+         coeff1(5,1) = -1.0000000000000000D0
+         coeff1(5,2) = -7.6505532392946469D-1
          !coeff1(5,3) = -2.852315164806e-01
-         coeff1(5,3) = -2.85231516480645096e-01
+         coeff1(5,3) = -2.85231516480645096D-1
          !coeff1(5,4) = +2.852315164806e-01
-         coeff1(5,4) = +2.85231516480645096e-01
-         coeff1(5,5) = +7.6505532392946469e-01
-         coeff1(5,6) = +1.0000000000000000e+00
+         coeff1(5,4) = +2.85231516480645096D-1
+         coeff1(5,5) = +7.6505532392946469D-1
+         coeff1(5,6) = +1.0000000000000000D0
 
          !OUTPUT GRIDPOINTS
-         coeff2(1,1) = -1.0000000000000000e+00
-         coeff2(1,2) = +1.0000000000000000e+00
+         coeff2(1,1) = -1.0000000000000000D0
+         coeff2(1,2) = +1.0000000000000000D0
 
-         coeff2(2,1) = -1.0000000000000000e+00
-         coeff2(2,2) = +0.0000000000000000e+00
-         coeff2(2,3) = +1.0000000000000000e+00
+         coeff2(2,1) = -1.0000000000000000D0
+         coeff2(2,2) = +0.0000000000000000D0
+         coeff2(2,3) = +1.0000000000000000D0
 
-         coeff2(3,1) = -1.0000000000000000e+00
-         coeff2(3,2) = -3.3333333333333333e-01
-         coeff2(3,3) = +3.3333333333333333e-01
-         coeff2(3,4) = +1.0000000000000000e+00
+         coeff2(3,1) = -1.0000000000000000D0
+         coeff2(3,2) = -3.3333333333333333D-1
+         coeff2(3,3) = +3.3333333333333333D-1
+         coeff2(3,4) = +1.0000000000000000D0
 
-         coeff2(4,1) = -1.0000000000000000e+00
-         coeff2(4,2) = -5.0000000000000000e-01
-         coeff2(4,3) = +0.0000000000000000e+00
-         coeff2(4,4) = +5.0000000000000000e-01
-         coeff2(4,5) = +1.0000000000000000e+00
+         coeff2(4,1) = -1.0000000000000000D0
+         coeff2(4,2) = -5.0000000000000000D-1
+         coeff2(4,3) = +0.0000000000000000D0
+         coeff2(4,4) = +5.0000000000000000D-1
+         coeff2(4,5) = +1.0000000000000000D0
 
-         coeff2(5,1) = -1.0000000000000000e+00
-         coeff2(5,2) = -6.0000000000000000e-01
-         coeff2(5,3) = -2.0000000000000000e-01
-         coeff2(5,4) = +2.0000000000000000e-01
-         coeff2(5,5) = +6.0000000000000000e-01
-         coeff2(5,6) = +1.0000000000000000e+00
+         coeff2(5,1) = -1.0000000000000000D0
+         coeff2(5,2) = -6.0000000000000000D-1
+         coeff2(5,3) = -2.0000000000000000D-1
+         coeff2(5,4) = +2.0000000000000000D-1
+         coeff2(5,5) = +6.0000000000000000D-1
+         coeff2(5,6) = +1.0000000000000000D0
 
           if( ng .Gt. MaxG ) then
             write(*,*) ' Error : incorrect size of grid'
@@ -672,7 +673,8 @@ c            write(*, *) nf1
           Nj3 = ne
           Nk3 = ne
 
-          dh = (2.0 * Pi_const)/dble(ne)
+          dh = 2.0D0 * Pi_const
+          dh = dh/dble(ne)
 
           do k = Nk1, Nk3, 1
           do j = Nj1, Nj3, 1
@@ -694,14 +696,14 @@ c            write(*, *) nf1
               indk = (k-1)*pp+n
 
               !At Cartesian Points
-              Xg(indi,indj,indk) = dble(ri-1)*dh + (coeff2(p,l)+1)/2*dh;
-              Yg(indi,indj,indk) = dble(rj-1)*dh + (coeff2(p,m)+1)/2*dh;
-              Zg(indi,indj,indk) = dble(rk-1)*dh + (coeff2(p,n)+1)/2*dh;
+              Xg(indi,indj,indk) = (ri-1)*dh + (coeff2(p,l)+1)/2*dh;
+              Yg(indi,indj,indk) = (rj-1)*dh + (coeff2(p,m)+1)/2*dh;
+              Zg(indi,indj,indk) = (rk-1)*dh + (coeff2(p,n)+1)/2*dh;
 
               !At Solution Points
-              Xs(indi,indj,indk) = dble(ri-1)*dh + (coeff1(p,l)+1)/2*dh;
-              Ys(indi,indj,indk) = dble(rj-1)*dh + (coeff1(p,m)+1)/2*dh;
-              Zs(indi,indj,indk) = dble(rk-1)*dh + (coeff1(p,n)+1)/2*dh;
+              Xs(indi,indj,indk) = (ri-1)*dh + (coeff1(p,l)+1)/2*dh;
+              Ys(indi,indj,indk) = (rj-1)*dh + (coeff1(p,m)+1)/2*dh;
+              Zs(indi,indj,indk) = (rk-1)*dh + (coeff1(p,n)+1)/2*dh;
 
             enddo
             enddo
@@ -709,7 +711,7 @@ c            write(*, *) nf1
           enddo
           enddo
           enddo
-
+          
           VolBox = dble((Ni2-Ni1)*(Nj2-Nj1)*(Nk2-Nk1))
           Ngrd   = 3
 
@@ -729,9 +731,9 @@ c            write(*, *) nf1
           do k = Nk1, Nk2, 1
           do j = Nj1, Nj2, 1
           do i = Ni1, Ni2, 1
-            Xg(i,j,k) = dble(i-1) * dh
-            Yg(i,j,k) = dble(j-1) * dh
-            Zg(i,j,k) = dble(k-1) * dh
+            Xg(i,j,k) = (i-1) * dh
+            Yg(i,j,k) = (j-1) * dh
+            Zg(i,j,k) = (k-1) * dh
           enddo
           enddo
           enddo
