@@ -102,12 +102,17 @@ file.close()
 #                 REORDER DATA FOR PHiLiP
 #===========================================================
 
-file = open("reordered_data.dat","w")
-file_for_philip = open("setup_philip.dat","w")
+num_procs = 4;
+nDOF_per_proc = nDOF/num_procs;
+philip_prefix="setup_philip"
 
+# TO DO:
+# if(nDOF % nDOFs_per_proc != 0):
+#     print("ERROR: Must use a number of processors that evenly divides the ")
+
+file = open("reordered_data.dat","w")
 wstr = "%i\n" % nDOF
 file.write(wstr)
-file_for_philip.write(wstr)
 
 nLoops = 3
 loop_bounds = np.ones(nLoops,dtype=np.int64)
@@ -133,6 +138,10 @@ if(nElements_per_direction>=16):
     number of elements per direction
     currently can handle up to 16 (i.e. 2,4,8,16)
 '''
+
+iproc = 0
+iDOF_per_proc = 0
+start_new_file=True
 
 ez_L_base_base = 0
 for z_base_base in range(0,loop_bounds[2]):
@@ -171,10 +180,18 @@ for z_base_base in range(0,loop_bounds[2]):
                                                                     (stored_data[ez,ey,ex,qz,qy,qx,0,0],stored_data[ez,ey,ex,qz,qy,qx,0,1],\
                                                                         stored_data[ez,ey,ex,qz,qy,qx,0,2])
                                                             file.write(wstr)
+
                                                 for state in range(0,5):
                                                     for qz in range(0,nQuadPoints_per_element):
                                                         for qy in range(0,nQuadPoints_per_element):
                                                             for qx in range(0,nQuadPoints_per_element):
+                                                                if(state==0 and start_new_file):
+                                                                    filename_for_philip="%s-0000%i.dat" % (philip_prefix,iproc)
+                                                                    file_for_philip = open(filename_for_philip,"w")
+                                                                    wstr = "%i\n" % nDOF
+                                                                    file_for_philip.write(wstr)
+                                                                    start_new_file=False
+
                                                                 wstr2 = "%18.16e %18.16e %18.16e %i %18.16e\n" % \
                                                                         (stored_data[ez,ey,ex,qz,qy,qx,0,0],\
                                                                             stored_data[ez,ey,ex,qz,qy,qx,0,1],\
@@ -182,6 +199,16 @@ for z_base_base in range(0,loop_bounds[2]):
                                                                             state,\
                                                                             nondimensionalized_conservative_solution[ez,ey,ex,qz,qy,qx,0,state])
                                                                 file_for_philip.write(wstr2)
+
+                                                                if(state==4):
+                                                                    iDOF_per_proc += 1
+
+                                                                if(state==4 and (iDOF_per_proc == nDOF_per_proc)):
+                                                                    file_for_philip.close()
+                                                                    iDOF_per_proc = 0
+                                                                    iproc += 1
+                                                                    start_new_file=True
+
                                     ex_L += 2
                                 ey_L += 2
                             ez_L += 2
@@ -193,7 +220,7 @@ for z_base_base in range(0,loop_bounds[2]):
     ez_L_base_base = ez_L_base
 
 file.close()
-file_for_philip.close()
+# file_for_philip.close()
 
 # check that it works
 
