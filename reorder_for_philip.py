@@ -37,12 +37,12 @@ eddy_turnover_time = 1.0
 #        on freestream quantities
 
 # Determine final time for PHiLiP
-nondimensional_eddy_turnover_time = eddy_turnover_time/(L/freestream_velocity)
+nondimensional_eddy_turnover_time = eddy_turnover_time/(characteristic_length/freestream_velocity)
 nondimensionalized_density = 1.0
 nondimensionalized_pressure = 1.0
 
-# nDOF = np.loadtxt("setup.dat",max_rows=1,dtype='int')
-nDOF = 13824 # for python 2.7
+nDOF = np.loadtxt("setup.dat",max_rows=1,dtype='int')
+# nDOF = 13824 # for python 2.7
 raw_data = np.loadtxt("setup.dat",skiprows=1,dtype=np.float64)
 np.savetxt("reference_data.dat",raw_data)
 nValues_per_row = 6
@@ -82,7 +82,7 @@ for ez in range(0,nElements_per_direction):
                         # ON THE FLY PRE-PROCESSING
                         # --------------------------------------------------------------------
                         # Primitive solution at current point
-                        nondimensionalized_primitive_sol_at_q_point = np.array(5,dtype=np.float64)
+                        nondimensionalized_primitive_sol_at_q_point = np.zeros(5,dtype=np.float64)
                         nondimensionalized_primitive_sol_at_q_point[0] = nondimensionalized_density
                         nondimensionalized_primitive_sol_at_q_point[4] = nondimensionalized_pressure
                         # -- Apply freestream non-dimensionalization to velocity components
@@ -104,6 +104,10 @@ file.close()
 
 file = open("reordered_data.dat","w")
 file_for_philip = open("setup_philip.dat","w")
+
+wstr = "%i\n" % nDOF
+file.write(wstr)
+file_for_philip.write(wstr)
 
 nLoops = 3
 loop_bounds = np.ones(nLoops,dtype=np.int64)
@@ -171,10 +175,11 @@ for z_base_base in range(0,loop_bounds[2]):
                                                     for qz in range(0,nQuadPoints_per_element):
                                                         for qy in range(0,nQuadPoints_per_element):
                                                             for qx in range(0,nQuadPoints_per_element):
-                                                                wstr2 = "%18.16e %18.16e %18.16e %18.16e \n" % \
+                                                                wstr2 = "%18.16e %18.16e %18.16e %i %18.16e\n" % \
                                                                         (stored_data[ez,ey,ex,qz,qy,qx,0,0],\
                                                                             stored_data[ez,ey,ex,qz,qy,qx,0,1],\
                                                                             stored_data[ez,ey,ex,qz,qy,qx,0,2],\
+                                                                            state,\
                                                                             nondimensionalized_conservative_solution[ez,ey,ex,qz,qy,qx,0,state])
                                                                 file_for_philip.write(wstr2)
                                     ex_L += 2
@@ -192,11 +197,12 @@ file_for_philip.close()
 
 # check that it works
 
-data_dir = "philip_outputs/1procs/"
-filename="coord_check_%i_elements_p%i-proc_0.txt" % (nElements_per_direction,poly_degree)
+data_dir = "philip_outputs/"
+# filename="1procs/coord_check_%i_elements_p%i-proc_0.txt" % (nElements_per_direction,poly_degree)
+filename="8procs/assembled_coords.txt"
 philip_data = np.loadtxt(data_dir + filename,skiprows=1,dtype=np.float64)
 
-reordered_data = np.loadtxt("reordered_data.dat",dtype=np.float64)
+reordered_data = np.loadtxt("reordered_data.dat",skiprows=1,dtype=np.float64)
 
 file = open("check_reordering_vs_philip_output.dat","w")
 for i in range(0,nDOF):
