@@ -1,5 +1,5 @@
 import numpy as np
-
+from var import *
 # x = np.loadtxt("check.txt",usecols=0)
 # npoints = np.size(x)
 
@@ -41,17 +41,10 @@ nondimensional_eddy_turnover_time = eddy_turnover_time/(characteristic_length/fr
 nondimensionalized_density = 1.0
 nondimensionalized_pressure = 1.0
 
-nDOF = np.loadtxt("setup.dat",max_rows=1,dtype='int')
-# nDOF = 13824 # for python 2.7
+# nDOF = np.loadtxt("setup.dat",max_rows=1,dtype='int')
+nDOF = 13824 # for python 2.7
 raw_data = np.loadtxt("setup.dat",skiprows=1,dtype=np.float64)
 np.savetxt("reference_data.dat",raw_data)
-nValues_per_row = 6
-
-nElements_per_direction = 4
-nElements = nElements_per_direction*nElements_per_direction*nElements_per_direction
-poly_degree = 5
-nQuadPoints_per_element = poly_degree + 1
-nQuadPoints = nQuadPoints_per_element*nElements_per_direction
 
 stored_data = np.zeros((nElements_per_direction,nElements_per_direction,nElements_per_direction,nQuadPoints_per_element,nQuadPoints_per_element,nQuadPoints_per_element,1,nValues_per_row),dtype=np.float64)
 nondimensionalized_conservative_solution = np.zeros((nElements_per_direction,nElements_per_direction,nElements_per_direction,nQuadPoints_per_element,nQuadPoints_per_element,nQuadPoints_per_element,1,5),dtype=np.float64)
@@ -97,13 +90,13 @@ for ez in range(0,nElements_per_direction):
                             nondimensionalized_conservative_solution[ez,ey,ex,qz,qy,qx,0,state] = 1.0*nondimensionalized_conservative_sol_at_q_point[state]
                         # ------------------------------- END --------------------------------
 file.close()
-
+# NOTE: Do 'diff read_test.dat setup.dat' to make sure we're reading this properly
 #===========================================================
 #                 REORDER DATA FOR PHiLiP
 #===========================================================
 
-num_procs = 4;
-nDOF_per_proc = nDOF/num_procs;
+num_procs = 4
+nDOF_per_proc = nDOF/num_procs
 philip_prefix="setup_philip"
 
 # TO DO:
@@ -113,26 +106,6 @@ philip_prefix="setup_philip"
 file = open("reordered_data.dat","w")
 wstr = "%i\n" % nDOF
 file.write(wstr)
-
-nLoops = 3
-loop_bounds = np.ones(nLoops,dtype=np.int64)
-
-if(nElements_per_direction>=4):
-    loop_bounds[0] = 2
-if(nElements_per_direction>=8):
-    loop_bounds[1] = 2
-if(nElements_per_direction>=16):
-    loop_bounds[2] = 2
-# if(nElements_per_direction>=32):
-#     loop_bounds[3] = 2
-# if(nElements_per_direction>=64):
-#     loop_bounds[4] = 2
-# if(nElements_per_direction>=128):
-#     loop_bounds[5] = 2
-# if(nElements_per_direction>=256):
-#     loop_bounds[6] = 2
-# if(nElements_per_direction>=512):
-#     loop_bounds[7] = 2
 
 ''' must add more nested for loops for higher
     number of elements per direction
@@ -220,17 +193,15 @@ for z_base_base in range(0,loop_bounds[2]):
     ez_L_base_base = ez_L_base
 
 file.close()
-# file_for_philip.close()
 
+# ================================================================
 # check that it works
-
+# ================================================================
 data_dir = "philip_outputs/"
 # filename="1procs/coord_check_%i_elements_p%i-proc_0.txt" % (nElements_per_direction,poly_degree)
 filename="8procs/assembled_coords.txt"
 philip_data = np.loadtxt(data_dir + filename,skiprows=1,dtype=np.float64)
-
 reordered_data = np.loadtxt("reordered_data.dat",skiprows=1,dtype=np.float64)
-
 file = open("check_reordering_vs_philip_output.dat","w")
 for i in range(0,nDOF):
     check = reordered_data[i,:]
@@ -239,6 +210,5 @@ for i in range(0,nDOF):
     if(err > 2.0e-15):
         err_msg = "%i %18.16e \n" % (i,err)
         file.write(err_msg)
-
 file.close()
-        
+# ================================================================
