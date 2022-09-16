@@ -9,13 +9,13 @@ from var import *
 # get padded mpi rank string
 def get_padded_mpi_rank_string(mpi_rank):
     padding_length = 5
-    mpi_rank_string = '%i' % i_proc
-    mpi_rank_string.rjust(padding_length, "0")
+    mpi_rank_string = '%i' % mpi_rank
+    mpi_rank_string = mpi_rank_string.zfill(padding_length)
     return mpi_rank_string
 
 num_procs = 4
-subdir = "./philip_outputs"
-prefix = "velocity"
+subdir = "/home/julien/Codes/2022-09-01/PHiLiP/build_release/tests/integration_tests_control_files/decaying_homogeneous_isotropic_turbulence"
+prefix = "velocity-0"
 
 filename=subdir+"/"+prefix+".dat"
 fout = open(filename, "w")
@@ -34,6 +34,9 @@ stored_data = np.zeros((nElements_per_direction,nElements_per_direction,nElement
 
 velocity_file_from_philip = subdir+"/"+prefix+".dat"
 fin = open(velocity_file_from_philip,"r")
+
+# First line: Number of DOFs
+nDOF = int(fin.readline())
 
 ''' must add more nested for loops for higher
     number of elements per direction
@@ -89,7 +92,7 @@ for z_base_base in range(0,loop_bounds[2]):
 # Store the velocity field + coordinates
 #-------------------------------------------------------------
 expected_coords = np.loadtxt("setup.dat",skiprows=1,usecols=(0,1,2),dtype=np.float64)
-np.savetxt("setup_coords_only.dat",expected_coords)
+np.savetxt("setup_coords_only.dat",expected_coords,fmt="%18.16e")
 
 file = open("reverse_order_test.dat","w")
 # file = open("velocity.fld","w")
@@ -104,10 +107,6 @@ for ez in range(0,nElements_per_direction):
             for qy in range(0,nQuadPoints_per_element):
                 for ex in range(0,nElements_per_direction):
                     for qx in range(0,nQuadPoints_per_element):
-                        row_data = raw_data[i,:]
-                        for iValue in range(0,nValues_per_row):
-                            stored_data[ez,ey,ex,qz,qy,qx,0,iValue] = row_data[iValue]
-
                         # wstr = "%18.16e %18.16e %18.16e %18.16e %18.16e %18.16e\n" % \
                         #         (stored_data[ez,ey,ex,qz,qy,qx,0,0],stored_data[ez,ey,ex,qz,qy,qx,0,1],\
                         #             stored_data[ez,ey,ex,qz,qy,qx,0,2],stored_data[ez,ey,ex,qz,qy,qx,0,3],\
@@ -119,3 +118,18 @@ for ez in range(0,nElements_per_direction):
 file.close()
 # NOTE: check that it works by doing 'diff reverse_order_test.dat setup_coords_only.dat'
 
+# ================================================================
+# check that it works
+# ================================================================
+setup_data = np.loadtxt("setup_coords_only.dat",dtype=np.float64)
+readin_data_from_philip = np.loadtxt("reverse_order_test.dat",dtype=np.float64)
+file = open("check_reverse_reordering_of_philip_files_vs_setup.dat","w")
+for i in range(0,nDOF):
+    check = readin_data_from_philip[i,:]
+    ref = setup_data[i,:]
+    err = np.linalg.norm(check-ref)
+    if(err > 2.0e-15):
+        err_msg = "%i %18.16e \n" % (i,err)
+        file.write(err_msg)
+file.close()
+# ================================================================
