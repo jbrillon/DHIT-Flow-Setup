@@ -1,6 +1,8 @@
 function converter()
 
+fprintf("Importing data... ")
 A   = importdata('velocity.fld');
+fprintf("done.\n")
 
 % Coordinates
 B   = A(:,1); % x
@@ -18,19 +20,23 @@ for i=1:max(size(C))
 end
 
 turbulent_kinetic_energy = 0.5*mean(C(:,4)); % k
-disp('r.m.s. turbulence intensity:')
 rms_turbulence_intensity = sqrt((2.0/3.0)*turbulent_kinetic_energy) % u' or u_{r.m.s.}
+
+fprintf("Turbulent kinetic energy (TKE), k = %.6f\n",turbulent_kinetic_energy)
+fprintf("r.m.s. turbulence intensity, u_{r.m.s.} = %.6f\n",rms_turbulence_intensity)
+
 
 % From experiment
 freestream_velocity_from_experiment = 10.0; % [m/s]
 rms_turbulence_intensity_from_experiment = 0.222; % [m/s] 22.2cm/s
 mesh_size_from_experiment = 0.0508; % [m] 5.08cm
-% mesh_based_reynolds_number = 34000.0;
-% kinematic_viscosity_experiment = (freestream_velocity_from_experiment*mesh_size_from_experiment)/mesh_based_reynolds_number;
-taylor_microscale_from_experiment = 0.00484 % [m]
-integral_lengthscale_from_experiment = 0.0127 % [m]
-kinematic_viscosity_experiment = 27.3*(integral_lengthscale_from_experiment/taylor_microscale_from_experiment)
+mesh_based_reynolds_number = 34000.0;
+kinematic_viscosity_experiment = (freestream_velocity_from_experiment*mesh_size_from_experiment)/mesh_based_reynolds_number;
 
+taylor_microscale_from_experiment = 0.00484; % [m]
+integral_lengthscale_from_experiment = 0.0127; % [m]
+reynolds_number_based_on_taylor_microscale_from_exp = 71.6; %27.3*(integral_lengthscale_from_experiment/taylor_microscale_from_experiment);
+% kinematic_viscosity_experiment = (rms_turbulence_intensity_from_experiment*taylor_microscale_from_experiment)/reynolds_number_based_on_taylor_microscale_from_exp
 
 % Reference values
 size_of_computational_box = 11.0*mesh_size_from_experiment; % L=11M
