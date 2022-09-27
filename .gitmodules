@@ -1,0 +1,3 @@
+[submodule "submodules/quickplotlib"]
+	path = submodules/quickplotlib
+	url = https://github.com/jbrillon/quickplotlib.git
