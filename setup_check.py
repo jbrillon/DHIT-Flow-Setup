@@ -32,10 +32,6 @@ reynolds_number_based_on_taylor_microscale_from_exp = 60.7;
 kinematic_viscosity_experiment = (rms_turbulence_intensity_from_experiment*taylor_microscale_from_experiment)/reynolds_number_based_on_taylor_microscale_from_exp
 print("Viscosity at t=171: %18.6e" % kinematic_viscosity_experiment)
 
-import sys
-sys.path.append("./submodules")
-import quickplotlib
-
 exit()
 
 reynolds_number_based_on_mesh_and_rms_velocity_from_experiment = (rms_turbulence_intensity_from_experiment*mesh_size_from_experiment)/kinematic_viscosity_experiment
