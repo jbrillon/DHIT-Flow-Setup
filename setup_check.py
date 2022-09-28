@@ -2,20 +2,41 @@ import numpy as np
 
 # From experiment
 freestream_velocity_from_experiment = 10.0; # [m/s]
-rms_turbulence_intensity_from_experiment = 0.222; # [m/s] 22.2cm/s
 mesh_size_from_experiment = 0.0508; # [m] 5.08cm
 
 # viscosity based on freestream mesh-based Reynolds number
 mesh_based_reynolds_number = 34000.0;
 kinematic_viscosity_experiment = (freestream_velocity_from_experiment*mesh_size_from_experiment)/mesh_based_reynolds_number;
 
-# # viscosity based on the t=42 table values
-# taylor_microscale_from_experiment = 0.00484; # [m]
-# integral_lengthscale_from_experiment = 0.0127; # [m]
-# reynolds_number_based_on_taylor_microscale_from_exp = 71.6; #27.3*(integral_lengthscale_from_experiment/taylor_microscale_from_experiment);
-# kinematic_viscosity_experiment = (rms_turbulence_intensity_from_experiment*taylor_microscale_from_experiment)/reynolds_number_based_on_taylor_microscale_from_exp
+# viscosity based on the t=42 table values
+rms_turbulence_intensity_from_experiment = 0.222; # [m/s]
+taylor_microscale_from_experiment = 0.00484; # [m]
+integral_lengthscale_from_experiment = 0.0127; # [m]
+reynolds_number_based_on_taylor_microscale_from_exp = 71.6;
+kinematic_viscosity_experiment = (rms_turbulence_intensity_from_experiment*taylor_microscale_from_experiment)/reynolds_number_based_on_taylor_microscale_from_exp
+print("Viscosity at t=42: %18.6e" % kinematic_viscosity_experiment)
 
-print("Viscosity: %18.6e" % kinematic_viscosity_experiment)
+# viscosity based on the t=98 table values
+rms_turbulence_intensity_from_experiment = 0.128; # [m/s]
+taylor_microscale_from_experiment = 0.00764; # [m]
+integral_lengthscale_from_experiment = 0.0188; # [m]
+reynolds_number_based_on_taylor_microscale_from_exp = 65.3;
+kinematic_viscosity_experiment = (rms_turbulence_intensity_from_experiment*taylor_microscale_from_experiment)/reynolds_number_based_on_taylor_microscale_from_exp
+print("Viscosity at t=98: %18.6e" % kinematic_viscosity_experiment)
+
+# viscosity based on the t=171 table values
+rms_turbulence_intensity_from_experiment = 0.0895; # [m/s]
+taylor_microscale_from_experiment = 0.0102; # [m]
+integral_lengthscale_from_experiment = 0.0228; # [m]
+reynolds_number_based_on_taylor_microscale_from_exp = 60.7;
+kinematic_viscosity_experiment = (rms_turbulence_intensity_from_experiment*taylor_microscale_from_experiment)/reynolds_number_based_on_taylor_microscale_from_exp
+print("Viscosity at t=171: %18.6e" % kinematic_viscosity_experiment)
+
+import sys
+sys.path.append("./submodules")
+import quickplotlib
+
+exit()
 
 reynolds_number_based_on_mesh_and_rms_velocity_from_experiment = (rms_turbulence_intensity_from_experiment*mesh_size_from_experiment)/kinematic_viscosity_experiment
 print("Mesh based Reynolds number using r.m.s. velocity: %18.6f" % reynolds_number_based_on_mesh_and_rms_velocity_from_experiment)
