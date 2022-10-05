@@ -43,8 +43,15 @@ nondimensionalized_pressure = 1.0
 
 # nDOF = np.loadtxt("setup.dat",max_rows=1,dtype='int')
 nDOF = 13824 # for python 2.7
+nDOF_expected = (nElements_per_direction*nQuadPoints_per_element)*\
+                (nElements_per_direction*nQuadPoints_per_element)*\
+                (nElements_per_direction*nQuadPoints_per_element)
+
+if(nDOF!=nDOF_expected):
+    print("Error: nDOF does not match expected nDOF, check var.py. Aborting...")
+    exit()
+
 raw_data = np.loadtxt("setup.dat",skiprows=1,dtype=np.float64)
-np.savetxt("reference_data.dat",raw_data)
 
 stored_data = np.zeros((nElements_per_direction,nElements_per_direction,nElements_per_direction,nQuadPoints_per_element,nQuadPoints_per_element,nQuadPoints_per_element,1,nValues_per_row),dtype=np.float64)
 nondimensionalized_conservative_solution = np.zeros((nElements_per_direction,nElements_per_direction,nElements_per_direction,nQuadPoints_per_element,nQuadPoints_per_element,nQuadPoints_per_element,1,5),dtype=np.float64)
@@ -91,6 +98,64 @@ for ez in range(0,nElements_per_direction):
                         # ------------------------------- END --------------------------------
 file.close()
 # NOTE: Do 'diff read_test.dat setup.dat' to make sure we're reading this properly
+
+
+
+# AVERAGE VALUES AT THE FACE -- CODE
+# TO DO: Generate velocity.fld but the **cartesian** one for p5 Nel=4
+#        Generate the input_vel_format.fld 
+#        Check that the coordinates and also the vel averages are correct (avg should be exact same as velocity.fld)
+
+expected_unique_coordinates = np.loadtxt("input_vel_format.fld",skiprows=0,usecols=(0,1,2),dtype=np.float64)
+np.savetxt("expected_unique_coords_only.dat",expected_unique_coordinates,fmt="%18.16e")
+
+all_coordinates = np.loadtxt("velocity-cartesian.fld",skiprows=1,usecols=(0,1,2),dtype=np.float64)
+all_velocities = np.loadtxt("velocity-cartesian.fld",skiprows=1,usecols=(3,4,5),dtype=np.float64)
+reduced_nDOF = (nElements_per_direction*nQuadPoints_per_element - (nElements_per_direction-1))*\
+                (nElements_per_direction*nQuadPoints_per_element - (nElements_per_direction-1))*\
+                (nElements_per_direction*nQuadPoints_per_element - (nElements_per_direction-1))
+unique_coordinates = -1.0*np.ones((reduced_nDOF,3),dtype=np.float64)
+averaged_velocities = np.zeros((reduced_nDOF,3),dtype=np.float64)
+number_of_points_to_average_with = np.ones(reduced_nDOF,dtype=np.float64)
+
+print("nDOF: ")
+print(nDOF)
+print("reduced_nDOF: ")
+print(reduced_nDOF)
+
+# point_to_check_at = np.array([3.1415926535897931e+00, 3.1415926535897931e+00, 3.1415926535897931e+00])
+# check = np.equal(all_coordinates,point_to_check_at).all(1)
+# indices = np.where(check)[0]
+# vel_sum = np.zeros(3,dtype=np.float64)
+# for i in range(0,8):
+#     vel_sum += all_velocities[indices[i],:]
+#     print(indices[i])
+# print(vel_sum)
+
+j=0
+for i in range(0,nDOF):
+    check = np.equal(unique_coordinates,all_coordinates[i,:]).all(1)
+    if(any(check)):
+        index_of_repeated_point = np.where(check)[0][0]
+        averaged_velocities[index_of_repeated_point,:] += all_velocities[i,:]
+        number_of_points_to_average_with[index_of_repeated_point] += 1.0
+        continue
+    else:
+        unique_coordinates[j,:] = all_coordinates[i,:]
+        averaged_velocities[j,:] = all_velocities[i,:]
+        j += 1
+
+print("%.6e" % np.linalg.norm(averaged_velocities[4630,:]-vel_sum))
+
+np.savetxt("unique_coords_only.dat",unique_coordinates,fmt="%18.16e")
+np.savetxt("averaged_velocities.dat",averaged_velocities,fmt="%18.16e")
+np.savetxt("number_of_points_to_average_with.dat",number_of_points_to_average_with,fmt="%i")
+
+for j in range(0,reduced_nDOF):
+    averaged_velocities[j,:] = averaged_velocities[j,:]/number_of_points_to_average_with[j]
+
+exit()
+
 #===========================================================
 #                 REORDER DATA FOR PHiLiP
 #===========================================================

@@ -42,16 +42,32 @@ C           Pi_const = 3.14159265358979323846D0
           call GenerGrid( ng, p , set_read)
 
           if( set_read .Eq. 1 ) then
+            write(*,*) ' Reading velocity field, please wait. '
+            write(*,*) '... reading velocity field ...'
             call ReadFld( FileFldIn )
+            write(*,*) 'done.'
             write(*,*) ' Extract spectrum, please wait. '
+            write(*,*) '... extracting spectra ...'
             call Spectrum( )
+            write(*,*) 'done.'
+            write(*,*) '... writing spectra file ...'
             call WriteSpectrum( FileSpecOut )
+            write(*,*) 'done. Exiting...'
           else
+            write(*,*) ' Reading spectrum, please wait. '
+            write(*,*) '... reading spectrum ...'
             call ReadSpectrum( FileSpecIn, num )
+            write(*,*) 'done.'
             write(*,*) ' Generation velocity fields, please wait '
+            write(*,*) '... initializing ...'
             call InitFourier( num )
+            write(*,*) 'done.'
+            write(*,*) '... generating velocity field ...'
             call GenerVel( )
+            write(*,*) 'done.'
+            write(*,*) '... writing fld file ...'
             call WriteFld( ng, p, FileFldOut)
+            write(*,*) 'done. Exiting...'
           endif
         end
 
@@ -473,7 +489,7 @@ c            write(*, *) nf1
              Y1 = Ys(indi,indj,indk)
              Z1 = Zs(indi,indj,indk)
 
-             !BUILD THE LAGRANGE INERPOLATION
+             !BUILD THE LAGRANGE INTERPOLATION
              do ll = 1, pp, 1
              do mm = 1, pp, 1
              do nn = 1, pp, 1
@@ -625,9 +641,7 @@ c            write(*, *) nf1
 
          coeff1(5,1) = -1.0000000000000000D0
          coeff1(5,2) = -7.6505532392946469D-1
-         !coeff1(5,3) = -2.852315164806e-01
          coeff1(5,3) = -2.85231516480645096D-1
-         !coeff1(5,4) = +2.852315164806e-01
          coeff1(5,4) = +2.85231516480645096D-1
          coeff1(5,5) = +7.6505532392946469D-1
          coeff1(5,6) = +1.0000000000000000D0
