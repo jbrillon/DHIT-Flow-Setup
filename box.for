@@ -8,10 +8,14 @@
          character*72 FileSpecIn, FileSpecOut
          character*72 FileFldIn, FileFldOut_ED, FileFldOut_GL
          character*72 ControlFile
+         integer gener_expected_input_coords
 
           write(*,*) ' Very Slow Fourier Transform (VSFT)'
           write(*,*) "Input control filename: "
           read(*,*) ControlFile
+          write(*,*) "Generate expected input coordinates? (0 for no (default), 1 for yes) "
+          read(*,*) gener_expected_input_coords
+
           fw = 12
           call OpenInputFile( fw, ControlFile,'formatted')
           read( fw, * )
@@ -44,6 +48,10 @@
           write(*,*) 'Polynomial degree of the elements'
           write(*,*) p
 
+          if(gener_expected_input_coords.Eq.1) then
+            set_read = 1
+          endif
+
           if(set_read.Eq.0) then
             ng = ng*(p+1)
           else
@@ -61,6 +69,13 @@
           call GenerGrid( ng, p , set_read)
 
           if( set_read .Eq. 1 ) then
+            if(gener_expected_input_coords.Eq.1) then
+                write(*,*) ' Writing expected input coordinates, please wait.'
+                write(*,*) '... writing ...'
+                call GenerExpectedInputCoords()
+                write(*,*) 'done. Exiting...'
+              stop
+            endif
             write(*,*) ' Reading velocity field, please wait. '
             write(*,*) '... reading velocity field ...'
             call ReadFld( FileFldIn )
@@ -448,32 +463,44 @@ c            write(*, *) nf1
           endif
         end
 
+        subroutine GenerExpectedInputCoords()
+         include 'box.inc'
+         integer fw, i, j, k, n
+         integer fw_check
+         character*72 FileCheck
+
+          FileCheck = "expected_input.fld"
+
+          fw = 12
+          open (unit=fw,file=FileCheck,action="write",status="replace")
+          do k = Nk1, Nk2, 1
+          do j = Nj1, Nj2, 1
+          do i = Ni1, Ni2, 1
+            ! test that we're exactly reading in the same coordinates (x,y,z,3 dummy values)
+            write(fw,"(14F22.18)") Xg(i,j,k),Yg(i,j,k),Zg(i,j,k),Xg(i,j,k),Yg(i,j,k),Zg(i,j,k)
+          enddo
+          enddo
+          enddo
+          close( fw )
+        end
+
         subroutine ReadFld( FileName )
          include 'box.inc'
          integer fw, i, j, k, n
          character*(*) FileName
          real *16 read_x, read_y, read_z
          real *16 dx, dy, dz, dist, tol
-         integer fw_check
-         character*72 FileCheck
 
           ! tolerance for read point vs expected point
           tol = 1.0D-16
-
-          FileCheck = "expected_input.fld"
           
           fw = 12
           call OpenInputFile( fw, FileName,'formatted')
 
-          fw_check = 24
-          open (unit=fw_check,file=FileCheck,action="write",status="replace")
           do k = Nk1, Nk2, 1
           do j = Nj1, Nj2, 1
           do i = Ni1, Ni2, 1
             read(fw,"(14F22.18)") read_x,read_y,read_z,(Vel(i,j,k,n), n=1,Ngrd)
-            
-            ! test that we're exactly reading in the same file
-            write(fw_check,"(14F22.18)") Xg(i,j,k),Yg(i,j,k),Zg(i,j,k),(Vel(i,j,k,n), n=1,Ngrd)
             
             ! Distance between expected and read point
             dx = read_x-Xg(i,j,k)
@@ -489,7 +516,6 @@ c            write(*, *) nf1
           enddo
           enddo
           close( fw )
-          close( fw_check )
         end
 
         subroutine WriteFld(ng, p, FileName_ED, FileName_GL )
