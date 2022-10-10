@@ -1,10 +1,5 @@
 import numpy as np
 from var import *
-# x = np.loadtxt("check.txt",usecols=0)
-# npoints = np.size(x)
-
-# for i in range(1,npoints):
-#   print(x[i]-x[i-1])
 
 def get_conservative_from_primitive(primitive_soln):
     global gamma_gas_minus_one
@@ -96,84 +91,6 @@ for ez in range(0,nElements_per_direction):
                         # ------------------------------- END --------------------------------
 file.close()
 # NOTE: Do 'diff read_test.dat setup.dat' to make sure we're reading this properly
-
-
-
-# AVERAGE VALUES AT THE FACE -- CODE
-# TO DO: Generate velocity.fld but the **cartesian** one for p5 Nel=4
-#        Generate the input_vel_format.fld 
-#        Check that the coordinates and also the vel averages are correct (avg should be exact same as velocity.fld) -- do by not averaging them and compare to the averaged file
-
-# TO DO: Clean this up
-# move it to the reverse reordering
-expected_unique_coordinates = np.loadtxt("xyz_in.fld",skiprows=0,usecols=(0,1,2),dtype=np.float64)
-
-file = open("expected_unique_coords_only.dat","w")
-for i in range(0,reduced_nDOF):
-    wstr = " %21.18f %21.18f %21.18f\n" % \
-        (expected_unique_coordinates[i,0],expected_unique_coordinates[i,1],expected_unique_coordinates[i,2])
-    file.write(wstr)
-file.close()
-
-all_coordinates = np.loadtxt("vel_cart.fld",skiprows=0,usecols=(0,1,2),dtype=np.float64)
-all_velocities = np.loadtxt("vel_cart.fld",skiprows=0,usecols=(3,4,5),dtype=np.float64)
-unique_coordinates = -1.0*np.ones((reduced_nDOF,3),dtype=np.float64)
-averaged_velocities = np.zeros((reduced_nDOF,3),dtype=np.float64)
-non_averaged_velocities = np.zeros((reduced_nDOF,3),dtype=np.float64) # for verification purposes
-number_of_points_to_average_with = np.ones(reduced_nDOF,dtype=np.float64)
-
-print("nDOF: ")
-print(nDOF)
-print("reduced_nDOF: ")
-print(reduced_nDOF)
-
-j=0
-for i in range(0,nDOF):
-    check = np.equal(unique_coordinates,all_coordinates[i,:]).all(1)
-    if(any(check)):
-        index_of_repeated_point = np.where(check)[0][0]
-        averaged_velocities[index_of_repeated_point,:] += all_velocities[i,:]
-        number_of_points_to_average_with[index_of_repeated_point] += 1.0
-        continue
-    else:
-        unique_coordinates[j,:] = all_coordinates[i,:]
-        averaged_velocities[j,:] = 1.0*all_velocities[i,:]
-        non_averaged_velocities[j,:] = 1.0*all_velocities[i,:]
-        j += 1
-# average the values
-for j in range(0,reduced_nDOF):
-    averaged_velocities[j,:] = averaged_velocities[j,:]/number_of_points_to_average_with[j]
-
-np.savetxt("unique_coords_only.dat",unique_coordinates,fmt="%1.17e")
-# Note: To test --> diff expected_unique_coords_only.dat unique_coords_only.dat
-
-np.savetxt("number_of_points_to_average_with.dat",number_of_points_to_average_with,fmt="%i")
-
-np.savetxt("non_averaged_velocities.dat",non_averaged_velocities,fmt="%1.17e")
-
-np.savetxt("averaged_velocities.dat",averaged_velocities,fmt="%1.17e")
-
-# Check that the averaging works
-data_1 = np.loadtxt("non_averaged_velocities.dat",skiprows=0,dtype=np.float64)
-data_2 = np.loadtxt("averaged_velocities.dat",skiprows=0,dtype=np.float64)
-file = open("check_averaging.dat","w")
-for i in range(0,reduced_nDOF):
-    err = np.linalg.norm(data_1-data_2)
-    if(err > 1.0e-17):
-        err_msg = "%i %18.16e \n" % (i,err)
-        file.write(err_msg)
-file.close()
-
-# write the input file for the fortran code
-file = open("velocity.fld","w")
-for i in range(0,reduced_nDOF):
-    wstr = " %21.18f %21.18f %21.18f %21.18f %21.18f %21.18f\n" % \
-        (unique_coordinates[i,0],unique_coordinates[i,1],unique_coordinates[i,2],\
-            averaged_velocities[i,0],averaged_velocities[i,1],averaged_velocities[i,2])
-    file.write(wstr)
-file.close()
-# 
-exit()
 
 #===========================================================
 #                 REORDER DATA FOR PHiLiP
