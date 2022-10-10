@@ -7,10 +7,13 @@
          integer fw, num, ng, set_read, p
          character*72 FileSpecIn, FileSpecOut
          character*72 FileFldIn, FileFldOut_ED, FileFldOut_GL
+         character*72 ControlFile
 
           write(*,*) ' Very Slow Fourier Transform (VSFT)'
+          write(*,*) "Input control filename: "
+          read(*,*) ControlFile
           fw = 12
-          call OpenInputFile( fw, 'box.in','formatted')
+          call OpenInputFile( fw, ControlFile,'formatted')
           read( fw, * )
           read( fw, * )
           read( fw, * ) set_read
