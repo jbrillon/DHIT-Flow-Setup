@@ -1,15 +1,26 @@
-0                     ; 0 - Generate velocity; 1 - Extract spectrum
-4                    ; Grid size in elements
-5                     ; Polynomial degree of the elements
+c============== Global Inputs ===================
+c-- Desired task: 0 - Generate velocity; 1 - Extract spectrum
+1
+c-- Grid size in elements
+4
+c-- Polynomial degree of the elements
+5
 c-------------- Generation of velocity ------------------
-4                     ; Number of modes to take from file with input spectrum
-energy.prf            ; input file: File with input spectrum
-velocity.fld          ; output file: File with generated 3D velocity field
+c-- Number of modes to take from file with input spectrum
+4
+c-- input file: File with input spectrum
+energy.prf
+c-- output file using equidistant nodes: File with generated 3D velocity field
+velocity_equidistant_nodes.fld
+c-- output file using Gauss Lobatto nodes: File with generated 3D velocity field
+velocity_gl_nodes.fld
 c-------------- Extraction of spectrum    ------------------
-7                     ; Number of modes in the output spectrum
-spec.tec              ; output file: File with output spectrum
-velocity.fld          ; input file: File with input 3D velocity field
-
+c-- Number of modes in the output spectrum
+4
+c-- output file: File with output spectrum
+spec.tec
+c-- input file: File with input 3D velocity field
+velocity.fld
 c-----------------------------------------------------
 
 1. Computational domain: cube, (2*Pi)**3, with periodic

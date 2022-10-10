@@ -5,26 +5,41 @@
         program MAIN
          include 'box.inc'
          integer fw, num, ng, set_read, p
-         character*12 FileSpecIn, FileSpecOut
-         character*12 FileFldIn, FileFldOut
+         character*72 FileSpecIn, FileSpecOut
+         character*72 FileFldIn, FileFldOut_ED, FileFldOut_GL
 
           write(*,*) ' Very Slow Fourier Transform (VSFT)'
           fw = 12
           call OpenInputFile( fw, 'box.in','formatted')
+          read( fw, * )
+          read( fw, * )
           read( fw, * ) set_read
+          read( fw, * )
           read( fw, * ) ng
+          read( fw, * )
           read( fw, * ) p
           read( fw, * )
+          read( fw, * )
           read( fw, * ) NumK
-          read( fw,'(a12)') FileSpecIn
-          read( fw,'(a12)') FileFldOut
+          read( fw, * )
+          read( fw,'(a72)') FileSpecIn
+          read( fw, * )
+          read( fw,'(a72)') FileFldOut_ED
+          read( fw, * )
+          read( fw,'(a72)') FileFldOut_GL
+          read( fw, * )
           read( fw, * )
           read( fw, * ) NumKout
-          read( fw,'(a12)') FileSpecOut
-          read( fw,'(a12)') FileFldIn
+          read( fw, * )
+          read( fw,'(a72)') FileSpecOut
+          read( fw, * )
+          read( fw,'(a72)') FileFldIn
           close(fw)
-          
-          write(*,*) ng*(p+1), ng*p+1
+
+          write(*,*) 'Grid size in elements (along each edge)'
+          write(*,*) ng
+          write(*,*) 'Polynomial degree of the elements'
+          write(*,*) p
 
           if(set_read.Eq.0) then
             ng = ng*(p+1)
@@ -37,8 +52,9 @@
             stop
           endif
 
-C           Pi_const = 3.14159265358979323846D0
-          Pi_const = 3.141592653589793115998D0
+          ! True pi value
+          Pi_const = 3.14159265358979323846D0
+
           call GenerGrid( ng, p , set_read)
 
           if( set_read .Eq. 1 ) then
@@ -65,8 +81,12 @@ C           Pi_const = 3.14159265358979323846D0
             write(*,*) '... generating velocity field ...'
             call GenerVel( )
             write(*,*) 'done.'
-            write(*,*) '... writing fld file ...'
-            call WriteFld( ng, p, FileFldOut)
+            write(*,*) '... writing fld files ...'
+            write(*,*) '    file 1 - velocity field at equidistant nodes: '
+            write(*,*) FileFldOut_ED
+            write(*,*) '    file 2 - velocity field at Gauss-Lobatto (GL) nodes: '
+            write(*,*) FileFldOut_GL
+            call WriteFld( ng, p, FileFldOut_ED, FileFldOut_GL)
             write(*,*) 'done. Exiting...'
           endif
         end
@@ -417,10 +437,11 @@ c            write(*, *) nf1
           open( fw, file=FileName, status='OLD',
      ,          form = str, iostat=ioStatus )
           if( ioStatus .Ne. 0 ) then
-            write( *, '(''# Cant open file : '',A12)') FileName
+            write( *, '(''# Cant open file : '',A72)') FileName
+            write(*,*) ' Aborting...'
             stop
           else
-            write( *, '(''# Open file : '',A12)') FileName
+            write( *, '(''# Open file : '',A72)') FileName
           endif
         end
 
@@ -428,30 +449,56 @@ c            write(*, *) nf1
          include 'box.inc'
          integer fw, i, j, k, n
          character*(*) FileName
+         real *16 read_x, read_y, read_z
+         real *16 dx, dy, dz, dist, tol
+         integer fw_check
+         character*72 FileCheck
 
+          ! tolerance for read point vs expected point
+          tol = 1.0D-16
+
+          FileCheck = "expected_input.fld"
+          
           fw = 12
           call OpenInputFile( fw, FileName,'formatted')
+
+          fw_check = 24
+          open (unit=fw_check,file=FileCheck,action="write",status="replace")
           do k = Nk1, Nk2, 1
           do j = Nj1, Nj2, 1
           do i = Ni1, Ni2, 1
-            read(fw,"(F19.16)") (Vel(i,j,k,n), n=1,Ngrd)
-            !write(*,*) Vel(i,j,k,1),Vel(i,j,k,2),Vel(i,j,k,3)
+            read(fw,"(14F22.18)") read_x,read_y,read_z,(Vel(i,j,k,n), n=1,Ngrd)
+            
+            ! test that we're exactly reading in the same file
+            write(fw_check,"(14F22.18)") Xg(i,j,k),Yg(i,j,k),Zg(i,j,k),(Vel(i,j,k,n), n=1,Ngrd)
+            
+            ! Distance between expected and read point
+            dx = read_x-Xg(i,j,k)
+            dy = read_y-Yg(i,j,k)
+            dz = read_z-Zg(i,j,k)
+            dist = sqrt(dx*dx + dy*dy + dz*dz)
+            if(dist .gt. tol) then
+              write(*,*) ' Error: Coordinates in velocity field file does not match expected coordinates within tolerance.'
+              write(*,*) ' Aborting...'
+              stop
+            endif
           enddo
           enddo
           enddo
           close( fw )
+          close( fw_check )
         end
 
-        subroutine WriteFld(ng, p, FileName )
+        subroutine WriteFld(ng, p, FileName_ED, FileName_GL )
          include 'box.inc'
-         integer fw
-         integer ng, i, j, k, l, m, n, ne, pp, p, set_read
+         integer fw_ED, fw_GL
+         integer ng, i, j, k, l, m, n, ne, pp, p
          integer ll, mm, nn, o
          integer Ni3, Nj3, Nk3, indi, indj, indk
          real *16 dh, ri rj, rk, rl, rm, rn, rp
          real *16 X1, Y1, Z1, X2, Y2, Z2, wx, wy, wz
          real *16 Xo, Yo, Zo, U2, V2, W2
-         character*(*) FileName
+         character*(*) FileName_ED, FileName_GL
 
          !CONVERT FROM CARTESIAN GRID TO THE SOLUTION GRID
          ne = ng/(p+1)
@@ -562,17 +609,26 @@ c            write(*, *) nf1
          enddo
          enddo
 
-          fw = 12
-          open (unit=fw,file=Filename,action="write",status="replace")
+          ! Write velocity field at equidistant (ED) and Gauss-Lobatto (GL) nodes
+          ! -- Gauss-Lobatto (GL) nodes
+          fw_GL = 12
+          open (unit=fw_GL,file=Filename_GL,action="write",status="replace")
+          ! -- equidistant (ED) nodes:
+          fw_ED = 24
+          open (unit=fw_ED,file=Filename_ED,action="write",status="replace")
+
           do k = Nk1, Nk2, 1
           do j = Nj1, Nj2, 1
           do i = Ni1, Ni2, 1
-            write(fw,"(14F22.18)") Xs(i,j,k),Ys(i,j,k),
-     &          Zs(i,j,k),(Vel2(i,j,k,n), n=1,Ngrd)
+            ! Velocity field at Gauss-Lobatto (GL) nodes
+            write(fw_GL,"(14F22.18)") Xs(i,j,k),Ys(i,j,k),Zs(i,j,k),(Vel2(i,j,k,n), n=1,Ngrd)
+            ! Velocity field at equidistant nodes
+            write(fw_ED,"(14F22.18)") Xg(i,j,k),Yg(i,j,k),Zg(i,j,k),(Vel(i,j,k,n), n=1,Ngrd)
           enddo
           enddo
           enddo
-          close( fw )
+          close( fw_GL )
+          close( fw_ED )
         end
 
         subroutine ReadSpectrum( FileName, num  )
@@ -585,6 +641,7 @@ c            write(*, *) nf1
           read(fw, * ) num
           if( num .Gt. MaxIn ) then
             write(*,*) ' Error: incorrect number energy profiles'
+            write(*,*) ' Aborting...'
             stop
           endif
           do i = 1, num,  1
@@ -674,6 +731,7 @@ c            write(*, *) nf1
 
           if( ng .Gt. MaxG ) then
             write(*,*) ' Error : incorrect size of grid'
+            write(*,*) ' Aborting...'
             stop
           endif
           write(*,*) ne
@@ -733,6 +791,7 @@ c            write(*, *) nf1
 
           if( ng .Gt. MaxG ) then
             write(*,*) ' Error : incorrect size of grid'
+            write(*,*) ' Aborting...'
             stop
           endif
           Ni1 = 1
