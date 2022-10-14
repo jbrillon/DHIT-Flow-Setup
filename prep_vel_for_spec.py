@@ -1,7 +1,7 @@
 import numpy as np
 from var import *
 
-# Filename for resulting averaged velocity filed (output of this code)
+# Filename for resulting averaged velocity field (output of this code)
 averaged_velocity_field_filename = "velocity.fld"
 
 print("Input nDOF: %i" % nDOF)
@@ -9,7 +9,7 @@ print("Resulting reduced nDOF: %i" % reduced_nDOF)
 
 print(" ")
 # Specify velocity field file
-velocity_field_filename = raw_input('Input velocity field filename: ')
+velocity_field_filename = input('Input velocity field filename: ')
 print("Averaging velocity field given by file: %s" % velocity_field_filename)
 
 all_coordinates = np.loadtxt(velocity_field_filename,skiprows=0,usecols=(0,1,2),dtype=np.float64)

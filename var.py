@@ -8,12 +8,9 @@ poly_degree = 5
 nElements = nElements_per_direction*nElements_per_direction*nElements_per_direction
 nQuadPoints_per_element = poly_degree + 1
 nQuadPoints = nQuadPoints_per_element*nElements_per_direction
-nDOF = (nElements_per_direction*nQuadPoints_per_element)*\
-        (nElements_per_direction*nQuadPoints_per_element)*\
-        (nElements_per_direction*nQuadPoints_per_element)
-reduced_nDOF = (nElements_per_direction*nQuadPoints_per_element - (nElements_per_direction-1))*\
-                (nElements_per_direction*nQuadPoints_per_element - (nElements_per_direction-1))*\
-                (nElements_per_direction*nQuadPoints_per_element - (nElements_per_direction-1))
+nDOF = nQuadPoints*nQuadPoints*nQuadPoints
+reduced_nQuadPoints = nElements_per_direction*nQuadPoints_per_element - (nElements_per_direction-1)
+reduced_nDOF = reduced_nQuadPoints*reduced_nQuadPoints*reduced_nQuadPoints
 
 nLoops = 3
 loop_bounds = np.ones(nLoops,dtype=np.int64)
