@@ -1,21 +1,30 @@
 from includes import *
-from var import *
+from var import get_reduced_nDOF_and_nQuadPoints
 from taylor_green_vortex_initial_condition import *
 from turbulent_flow_3D_data_processor import *
 
-'''
-    NOTE: Requires the following values in var.py
-    nElements_per_direction = 4
-    poly_degree = 5
-'''
+nElements_per_direction = 4
+poly_degree = 5
+reduced_nQuadPoints, reduced_nDOF = get_reduced_nDOF_and_nQuadPoints(nElements_per_direction,poly_degree)
 
-# Filename of averaged velocity field to read in
-averaged_velocity_field_filename = "./data/averaged_velocity_p5_n4.fld"
-coordinates = np.loadtxt(averaged_velocity_field_filename,skiprows=0,usecols=(0,1,2),dtype=np.float64)
-velocities = np.loadtxt(averaged_velocity_field_filename,skiprows=0,usecols=(3,4,5),dtype=np.float64)
+#----------------------------------------------------------------------
+# Generate coordinates
+#----------------------------------------------------------------------
+coordinates1D = np.linspace(0., 2.0*np.pi, num=reduced_nQuadPoints)
+coordinates = np.zeros((reduced_nDOF,3),dtype=np.float64)
+p = 0
+for k in range(0,reduced_nQuadPoints):
+    for j in range(0,reduced_nQuadPoints):
+        for i in range(0,reduced_nQuadPoints):
+            coordinates[p,0] = coordinates1D[i] # x
+            coordinates[p,1] = coordinates1D[j] # y
+            coordinates[p,2] = coordinates1D[k] # z
+            p += 1
 
 #----------------------------------------------------------------------
 # Set velocity field to TGV as a test
+#----------------------------------------------------------------------
+velocities = np.zeros((reduced_nDOF,3),dtype=np.float64)
 for i in range(0,reduced_nDOF):
     velocities[i,:] = tgv_initial_condition_primitive(coordinates[i])[1:4]
 #----------------------------------------------------------------------
