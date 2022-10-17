@@ -3,10 +3,9 @@ from var import get_reduced_nDOF_and_nQuadPoints
 from taylor_green_vortex_initial_condition import *
 from turbulent_flow_3D_data_processor import *
 
-nElements_per_direction = 4
+nElements_per_direction = 8
 poly_degree = 5
 reduced_nQuadPoints, reduced_nDOF = get_reduced_nDOF_and_nQuadPoints(nElements_per_direction,poly_degree)
-
 #----------------------------------------------------------------------
 # Generate coordinates
 #----------------------------------------------------------------------

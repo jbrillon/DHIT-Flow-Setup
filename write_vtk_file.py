@@ -1,5 +1,4 @@
 import numpy as np
-from var import *
 
 def write_vtk_file_uniform_cube(
     coordinates,
@@ -13,7 +12,8 @@ def write_vtk_file_uniform_cube(
     # =============================
     # examples: https://visit-sphinx-github-user-manual.readthedocs.io/en/task-allen-vtk9_master_ospray/data_into_visit/VTKFormat.html
     # official documentation: https://vtk.org/wp-content/uploads/2015/04/file-formats.pdf
-
+    reduced_nDOF = int(coordinates.shape[0])
+    reduced_nQuadPoints = int(round(reduced_nDOF**(1.0/3.0)))
     print("Writing vtk file: %s ... " % filename)
     dataType = "double"
     file = open(filename,"w") # change your vtk file name
@@ -21,13 +21,13 @@ def write_vtk_file_uniform_cube(
     file.write("Cube example\n")
     file.write("ASCII\n")
     file.write("DATASET STRUCTURED_GRID\n")
-    file.write(" ")
+    file.write("\n")
     file.write("DIMENSIONS %i %i %i\n" % (reduced_nQuadPoints,reduced_nQuadPoints,reduced_nQuadPoints))
     file.write("POINTS %i %s\n" % (reduced_nDOF,dataType))
     for i in range(0,reduced_nDOF):
         wstr = "%1.15f %1.15f %1.15f\n" % (coordinates[i,0],coordinates[i,1],coordinates[i,2])
         file.write(wstr)
-    file.write(" ")
+    file.write("\n")
     file.write("POINT_DATA %i\n" % (reduced_nDOF))
     # write 3 velocity components
     file.write("SCALARS u %s 1\n" % dataType)

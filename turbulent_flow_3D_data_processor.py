@@ -1,7 +1,6 @@
 import numpy as np
 import pyvista as pv
 import meshio
-from var import *
 from write_vtk_file import write_vtk_file_uniform_cube
 
 '''
@@ -86,6 +85,20 @@ def visualize_turbulent_flow_from_mesh_and_gradient_objects(mesh,mesh_g,gradient
     p.view_isometric()
     p.show()
 
+    # to plot both quantities
+    quantities=["vorticity","qcriterion"]
+    n_quantities = len(quantities)
+    p = pv.Plotter(shape=(1,n_quantities))
+    for i in range(0,n_quantities):
+        name = quantities[i]
+        p.subplot(0,i)
+        p.add_mesh(mesh_g.contour(scalars=name), scalars=name, opacity=1.0)
+        p.add_mesh(mesh_g.outline(), color="k")
+
+    p.link_views()
+    p.view_isometric()
+    p.show()
+
     # mesh_g.plot(scalars="vorticity")
 
     # ###############################################################################
@@ -128,7 +141,7 @@ def compute_turbulent_quantities(coordinates,velocities,
     #======================================================================
     # ---- Compute flow quantities
     #======================================================================
-
+    reduced_nDOF = int(coordinates.shape[0])
     # velocity magnitude squared at each point
     velocity_magnitude_squared = np.zeros(reduced_nDOF,dtype=np.float64)
     for i in range(0,reduced_nDOF):
@@ -169,7 +182,6 @@ def compute_turbulent_quantities(coordinates,velocities,
         turbulent_quantities.append(taylor_micro_scale)
 
     return turbulent_quantities
-    
 
 # # Filename of averaged velocity field to read in
 # averaged_velocity_field_filename = "velocity.fld"
