@@ -3,6 +3,12 @@ from var import *
 from taylor_green_vortex_initial_condition import *
 from turbulent_flow_3D_data_processor import *
 
+'''
+    NOTE: Requires the following values in var.py
+    nElements_per_direction = 4
+    poly_degree = 5
+'''
+
 # Filename of averaged velocity field to read in
 averaged_velocity_field_filename = "./data/averaged_velocity_p5_n4.fld"
 coordinates = np.loadtxt(averaged_velocity_field_filename,skiprows=0,usecols=(0,1,2),dtype=np.float64)
