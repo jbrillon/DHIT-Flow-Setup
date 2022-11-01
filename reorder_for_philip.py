@@ -19,7 +19,7 @@ characteristic_length = 1.0 # L
 # Global constants
 global gamma_gas, gamma_gas_minus_one
 gamma_gas = 1.4
-gamma_gas_minus_one = 0.4
+gamma_gas_minus_one = gamma_gas - 1.0
 
 # TO DO: Read in setup_more.dat and assign the following variables
 freestream_velocity = 1.0
