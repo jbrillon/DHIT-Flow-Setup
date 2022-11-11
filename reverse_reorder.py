@@ -40,54 +40,63 @@ nDOF = int(fin.readline())
 
 ''' must add more nested for loops for higher
     number of elements per direction
-    currently can handle up to 16 (i.e. 2,4,8,16)
+    currently can handle up to 32 (i.e. 2,4,8,16,32)
 '''
 
 iproc = 0
 iDOF_per_proc = 0
 start_new_file=True
 
-ez_L_base_base = 0
-for z_base_base in range(0,loop_bounds[2]):
-    ey_L_base_base = 0
-    for y_base_base in range(0,loop_bounds[2]):
-        ex_L_base_base = 0
-        for x_base_base in range(0,loop_bounds[2]):
-            ez_L_base = ez_L_base_base
-            for z_base in range(0,loop_bounds[1]):
-                ey_L_base = ey_L_base_base
-                for y_base in range(0,loop_bounds[1]):
-                    ex_L_base = ex_L_base_base
-                    for x_base in range(0,loop_bounds[1]):
-                        # algorithm for a cube with 64 (4^3) elements:
-                        ez_L = ez_L_base
-                        for cz in range(0,loop_bounds[0]):
-                            ez_R = ez_L + 1
-                            ey_L = ey_L_base
-                            for cy in range(0,loop_bounds[0]):
-                                ey_R = ey_L + 1
-                                ex_L = ex_L_base
-                                for cx in range(0,loop_bounds[0]):
-                                    ex_R = ex_L + 1
-                                    for ez in range(ez_L,ez_R+1):
-                                        for ey in range(ey_L,ey_R+1):
-                                            for ex in range(ex_L,ex_R+1):
-                                                for qz in range(0,nQuadPoints_per_element):
-                                                    for qy in range(0,nQuadPoints_per_element):
-                                                        for qx in range(0,nQuadPoints_per_element):
-                                                            row_string = fin.readline()
-                                                            row_data = np.fromstring(row_string, dtype=np.float64, sep=' ')
-                                                            for iValue in range(0,nValues_per_row):
-                                                                stored_data[ez,ey,ex,qz,qy,qx,0,iValue] = row_data[iValue]
-                                    ex_L += 2
-                                ey_L += 2
-                            ez_L += 2
-                        ex_L_base = ex_L
-                    ey_L_base = ey_L
-                ez_L_base = ez_L
-            ex_L_base_base = ex_L_base
-        ey_L_base_base = ey_L_base
-    ez_L_base_base = ez_L_base
+ez_L_base_base_base = 0
+for z_base_base_base in range(0,loop_bounds[3]):
+    ey_L_base_base_base = 0
+    for y_base_base_base in range(0,loop_bounds[3]):
+        ex_L_base_base_base = 0
+        for x_base_base_base in range(0,loop_bounds[3]):
+            ez_L_base_base = ez_L_base_base_base
+            for z_base_base in range(0,loop_bounds[2]):
+                ey_L_base_base = ey_L_base_base_base
+                for y_base_base in range(0,loop_bounds[2]):
+                    ex_L_base_base = ex_L_base_base_base
+                    for x_base_base in range(0,loop_bounds[2]):
+                        ez_L_base = ez_L_base_base
+                        for z_base in range(0,loop_bounds[1]):
+                            ey_L_base = ey_L_base_base
+                            for y_base in range(0,loop_bounds[1]):
+                                ex_L_base = ex_L_base_base
+                                for x_base in range(0,loop_bounds[1]):
+                                    # algorithm for a cube with 64 (4^3) elements:
+                                    ez_L = ez_L_base
+                                    for cz in range(0,loop_bounds[0]):
+                                        ez_R = ez_L + 1
+                                        ey_L = ey_L_base
+                                        for cy in range(0,loop_bounds[0]):
+                                            ey_R = ey_L + 1
+                                            ex_L = ex_L_base
+                                            for cx in range(0,loop_bounds[0]):
+                                                ex_R = ex_L + 1
+                                                for ez in range(ez_L,ez_R+1):
+                                                    for ey in range(ey_L,ey_R+1):
+                                                        for ex in range(ex_L,ex_R+1):
+                                                            for qz in range(0,nQuadPoints_per_element):
+                                                                for qy in range(0,nQuadPoints_per_element):
+                                                                    for qx in range(0,nQuadPoints_per_element):
+                                                                        row_string = fin.readline()
+                                                                        row_data = np.fromstring(row_string, dtype=np.float64, sep=' ')
+                                                                        for iValue in range(0,nValues_per_row):
+                                                                            stored_data[ez,ey,ex,qz,qy,qx,0,iValue] = row_data[iValue]
+                                                ex_L += 2
+                                            ey_L += 2
+                                        ez_L += 2
+                                    ex_L_base = ex_L
+                                ey_L_base = ey_L
+                            ez_L_base = ez_L
+                        ex_L_base_base = ex_L_base
+                    ey_L_base_base = ey_L_base
+                ez_L_base_base = ez_L_base
+            ex_L_base_base_base = ex_L_base_base
+        ey_L_base_base_base = ey_L_base_base
+    ez_L_base_base_base = ez_L_base_base
 #-------------------------------------------------------------
 # Store the velocity field + coordinates
 #-------------------------------------------------------------

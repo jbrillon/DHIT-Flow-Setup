@@ -23,7 +23,7 @@ poly_degree = 5
 # Get DOF variables
 nElements,nQuadPoints_per_element,nQuadPoints,nDOF,reduced_nQuadPoints,reduced_nDOF = get_DOF_vars(nElements_per_direction,poly_degree)
 #-----------------------------------------------------
-nLoops = 3
+nLoops = 4
 loop_bounds = np.ones(nLoops,dtype=np.int64)
 if(nElements_per_direction>=4):
     loop_bounds[0] = 2
@@ -31,8 +31,8 @@ if(nElements_per_direction>=8):
     loop_bounds[1] = 2
 if(nElements_per_direction>=16):
     loop_bounds[2] = 2
-# if(nElements_per_direction>=32):
-#     loop_bounds[3] = 2
+if(nElements_per_direction>=32):
+    loop_bounds[3] = 2
 # if(nElements_per_direction>=64):
 #     loop_bounds[4] = 2
 # if(nElements_per_direction>=128):
