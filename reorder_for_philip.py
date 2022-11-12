@@ -1,6 +1,13 @@
 import numpy as np
 from var import *
 
+# get padded mpi rank string -- TO DO: Put this function somewhere since its being copied to a few files
+def get_padded_mpi_rank_string(mpi_rank):
+    padding_length = 5
+    mpi_rank_string = '%i' % mpi_rank
+    mpi_rank_string = mpi_rank_string.zfill(padding_length)
+    return mpi_rank_string
+
 def get_conservative_from_primitive(primitive_soln):
     global gamma_gas_minus_one
     density = 1.0*primitive_soln[0]
@@ -13,6 +20,17 @@ def get_conservative_from_primitive(primitive_soln):
     conservative_soln[4] = pressure/(gamma_gas_minus_one) + 0.5*density*np.dot(velocity,velocity)
     return conservative_soln
 
+def compute_mach_number(primitive_soln):
+    global gamma_gas_minus_one
+    density = 1.0*primitive_soln[0]
+    velocity = 1.0*primitive_soln[1:4]
+    pressure = 1.0*primitive_soln[4]
+
+    speed_of_sound = np.sqrt(gamma_gas*pressure/density)
+    velocity_magnitude = np.sqrt(velocity[0]*velocity[0] + velocity[1]*velocity[1] + velocity[2]*velocity[2])
+    mach_number = velocity_magnitude/speed_of_sound
+    return mach_number
+
 # Constants
 characteristic_length = 1.0 # L
 
@@ -21,8 +39,15 @@ global gamma_gas, gamma_gas_minus_one
 gamma_gas = 1.4
 gamma_gas_minus_one = gamma_gas - 1.0
 
-# TO DO: Read in setup_more.dat and assign the following variables
+# Set to 1 for box.for code values -- spectra already nondimensionalized
 freestream_velocity = 1.0
+freestream_mach_number = 0.000820634767928
+freestream_mach_number_sqr = freestream_mach_number*freestream_mach_number
+freestream_reynolds_number = 1726.211232508223
+maximum_desired_turbulent_mach_number = 0.1
+
+# TO DO: Read in setup_more.dat and assign the following variables
+
 freestream_mach_number = 1.0
 eddy_turnover_time = 1.0
 
@@ -36,9 +61,25 @@ nondimensional_eddy_turnover_time = eddy_turnover_time/(characteristic_length/fr
 nondimensionalized_density = 1.0
 nondimensionalized_pressure = 1.0
 
-# nDOF_expected = np.loadtxt("setup.dat",max_rows=1,dtype='int')
-nDOF_expected = 13824 # for python 2.7
+# (1) Pre-process file to generate the setup.dat file -- same way the deprecated MATLAB script did
+input_vel_field_file = "velocity_gl_nodes.fld"
+input_data = np.loadtxt(input_vel_field_file,dtype=np.float64)
+nDOF_input = input_data.shape[0]
+file = open("setup.dat","w")
+# file.write('Number of degrees of freedom:\n')
+wstr = "%i\n" % nDOF_input
+file.write(wstr)
+i = 0
+for i in range(0,nDOF_input):
+    wstr = "%18.16e %18.16e %18.16e %18.16e %18.16e %18.16e\n" % \
+            (input_data[i,0],input_data[i,1],\
+                input_data[i,2],input_data[i,3],\
+                input_data[i,4],input_data[i,5])
+    file.write(wstr)
+file.close()
 
+# (2) Read in the data from setup.dat
+nDOF_expected = np.loadtxt("setup.dat",max_rows=1,dtype='int')
 if(nDOF!=nDOF_expected):
     print("Error: nDOF does not match expected nDOF from file, check var.py")
     print("Aborting...")
@@ -76,12 +117,20 @@ for ez in range(0,nElements_per_direction):
                         # --------------------------------------------------------------------
                         # Primitive solution at current point
                         nondimensionalized_primitive_sol_at_q_point = np.zeros(5,dtype=np.float64)
-                        nondimensionalized_primitive_sol_at_q_point[0] = nondimensionalized_density
+                        nondimensionalized_primitive_sol_at_q_point[0] = gamma_gas*freestream_mach_number_sqr*nondimensionalized_pressure # isothermal initialization
                         nondimensionalized_primitive_sol_at_q_point[4] = nondimensionalized_pressure
                         # -- Apply freestream non-dimensionalization to velocity components
                         nondimensionalized_primitive_sol_at_q_point[1] = stored_data[ez,ey,ex,qz,qy,qx,0,3]/freestream_velocity
                         nondimensionalized_primitive_sol_at_q_point[2] = stored_data[ez,ey,ex,qz,qy,qx,0,4]/freestream_velocity
                         nondimensionalized_primitive_sol_at_q_point[3] = stored_data[ez,ey,ex,qz,qy,qx,0,5]/freestream_velocity
+
+                        # Check turbulent mach number
+                        mach_number_at_q_point = compute_mach_number(nondimensionalized_primitive_sol_at_q_point)
+                        if(mach_number_at_q_point > maximum_desired_turbulent_mach_number):
+                            print("Error: a local mach_number exceeds the maximum_desired_turbulent_mach_number")
+                            print("Aborting...")
+                            exit()
+
 
                         # Conservative solution at current point
                         nondimensionalized_conservative_sol_at_q_point = 1.0*get_conservative_from_primitive(nondimensionalized_primitive_sol_at_q_point)
@@ -96,9 +145,8 @@ file.close()
 #                 REORDER DATA FOR PHiLiP
 #===========================================================
 
-num_procs = 4
 nDOF_per_proc = nDOF/num_procs
-philip_prefix="setup_philip"
+philip_prefix="setup"
 
 # TO DO:
 # if(nDOF % nDOFs_per_proc != 0):
@@ -166,7 +214,8 @@ for z_base_base_base in range(0,loop_bounds[3]):
                                                                     for qy in range(0,nQuadPoints_per_element):
                                                                         for qx in range(0,nQuadPoints_per_element):
                                                                             if(state==0 and start_new_file):
-                                                                                filename_for_philip="%s-0000%i.dat" % (philip_prefix,iproc)
+                                                                                padded_mpi_rank_string = get_padded_mpi_rank_string(iproc)
+                                                                                filename_for_philip="%s-%s.dat" % (philip_prefix,padded_mpi_rank_string)
                                                                                 file_for_philip = open(filename_for_philip,"w")
                                                                                 wstr = "%i\n" % nDOF
                                                                                 file_for_philip.write(wstr)
@@ -203,7 +252,7 @@ for z_base_base_base in range(0,loop_bounds[3]):
     ez_L_base_base_base = ez_L_base_base
 
 file.close()
-
+exit()
 # ================================================================
 # check that it works
 # ================================================================

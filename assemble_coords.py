@@ -1,8 +1,8 @@
+from var import num_procs
 # test code for assembling coordinates outputted by PHiLiP
 
 tempfiles=[]
 
-num_procs = 4
 subdir = "./philip_outputs/%iprocs" % num_procs
 for i in range(0,num_procs):
     filename = subdir+"/"+"coord_check-proc_%i.txt" % i

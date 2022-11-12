@@ -13,9 +13,8 @@ def get_padded_mpi_rank_string(mpi_rank):
     mpi_rank_string = mpi_rank_string.zfill(padding_length)
     return mpi_rank_string
 
-num_procs = 4
-subdir = "/home/julien/Codes/2022-09-01/PHiLiP/build_release/tests/integration_tests_control_files/decaying_homogeneous_isotropic_turbulence"
-prefix = "velocity-0"
+subdir = "/Users/Julien/DHIT-Flow-Setup/philip_outputs/test"
+prefix = "velocity_vorticity-0"
 
 filename=subdir+"/"+prefix+".dat"
 fout = open(filename, "w")
@@ -36,7 +35,11 @@ velocity_file_from_philip = subdir+"/"+prefix+".dat"
 fin = open(velocity_file_from_philip,"r")
 
 # First line: Number of DOFs
-nDOF = int(fin.readline())
+nDOF_expected = int(fin.readline())
+if(nDOF!=nDOF_expected):
+    print("Error: nDOF does not match expected nDOF from file %s, check var.py",velocity_file_from_philip)
+    print("Aborting...")
+    exit()
 
 ''' must add more nested for loops for higher
     number of elements per direction
@@ -84,7 +87,7 @@ for z_base_base_base in range(0,loop_bounds[3]):
                                                                         row_string = fin.readline()
                                                                         row_data = np.fromstring(row_string, dtype=np.float64, sep=' ')
                                                                         for iValue in range(0,nValues_per_row):
-                                                                            stored_data[ez,ey,ex,qz,qy,qx,0,iValue] = row_data[iValue]
+                                                                            stored_data[ez,ey,ex,qz,qy,qx,0,iValue] = row_data[iValue] # modify to read in vorticity
                                                 ex_L += 2
                                             ey_L += 2
                                         ez_L += 2
@@ -100,10 +103,14 @@ for z_base_base_base in range(0,loop_bounds[3]):
 #-------------------------------------------------------------
 # Store the velocity field + coordinates
 #-------------------------------------------------------------
-expected_coords = np.loadtxt("setup.dat",skiprows=1,usecols=(0,1,2),dtype=np.float64)
-np.savetxt("setup_coords_only.dat",expected_coords,fmt="%18.16e")
+# expected coords are now cartesian
+expected_coords = np.loadtxt("velocity_equidistant_nodes.fld",skiprows=0,usecols=(0,1,2),dtype=np.float64)
+np.savetxt("setup_coords_only-2.dat",expected_coords,fmt="%18.16e")
 
-file = open("reverse_order_test.dat","w")
+reordered_velocity_file = subdir+"/"+prefix+"_reordered_for_spectra"+".dat"
+# reordered_velocity_file = "reverse_order_test-2.dat"
+file = open(reordered_velocity_file,"w")
+
 # file = open("velocity.fld","w")
 
 # file.write('Number of degrees of freedom:\n')
@@ -116,23 +123,23 @@ for ez in range(0,nElements_per_direction):
             for qy in range(0,nQuadPoints_per_element):
                 for ex in range(0,nElements_per_direction):
                     for qx in range(0,nQuadPoints_per_element):
-                        # wstr = "%18.16e %18.16e %18.16e %18.16e %18.16e %18.16e\n" % \
-                        #         (stored_data[ez,ey,ex,qz,qy,qx,0,0],stored_data[ez,ey,ex,qz,qy,qx,0,1],\
-                        #             stored_data[ez,ey,ex,qz,qy,qx,0,2],stored_data[ez,ey,ex,qz,qy,qx,0,3],\
-                        #             stored_data[ez,ey,ex,qz,qy,qx,0,4],stored_data[ez,ey,ex,qz,qy,qx,0,5])
-                        wstr = "%18.16e %18.16e %18.16e \n" % \
+                        wstr = "%18.16e %18.16e %18.16e %18.16e %18.16e %18.16e\n" % \
                                 (stored_data[ez,ey,ex,qz,qy,qx,0,0],stored_data[ez,ey,ex,qz,qy,qx,0,1],\
-                                    stored_data[ez,ey,ex,qz,qy,qx,0,2])
+                                    stored_data[ez,ey,ex,qz,qy,qx,0,2],stored_data[ez,ey,ex,qz,qy,qx,0,3],\
+                                    stored_data[ez,ey,ex,qz,qy,qx,0,4],stored_data[ez,ey,ex,qz,qy,qx,0,5])
+                        # wstr = "%18.16e %18.16e %18.16e \n" % \
+                        #         (stored_data[ez,ey,ex,qz,qy,qx,0,0],stored_data[ez,ey,ex,qz,qy,qx,0,1],\
+                        #             stored_data[ez,ey,ex,qz,qy,qx,0,2]) # coords only
                         file.write(wstr)
 file.close()
 # NOTE: check that it works by doing 'diff reverse_order_test.dat setup_coords_only.dat'
-
+exit()
 # ================================================================
 # check that it works
 # ================================================================
-setup_data = np.loadtxt("setup_coords_only.dat",dtype=np.float64)
-readin_data_from_philip = np.loadtxt("reverse_order_test.dat",dtype=np.float64)
-file = open("check_reverse_reordering_of_philip_files_vs_setup.dat","w")
+setup_data = np.loadtxt("setup_coords_only-2.dat",dtype=np.float64)
+readin_data_from_philip = np.loadtxt(reordered_velocity_file,dtype=np.float64)
+file = open("check_reverse_reordering_of_philip_files_vs_setup-2.dat","w")
 for i in range(0,nDOF):
     check = readin_data_from_philip[i,:]
     ref = setup_data[i,:]
