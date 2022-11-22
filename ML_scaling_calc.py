@@ -20,7 +20,7 @@ global mu
 mean_velocity = 10.0 # m/s
 Re_mesh = 34000.0
 mesh_size = 5.08/100.0 # m
-density = 1.225 # kg
+density = 1.225 # kg/m3
 viscosity = density*mean_velocity*mesh_size/Re_mesh
 mu = 1.0*viscosity
 
@@ -31,7 +31,7 @@ print("-------------------------------------------------------------------------
 
 # the dimensional reference (i.e. freestream temperature)
 temperature = fsolve(func,298.15)
-print(" - Freestream temperature: %3.11f [K]" % temperature)
+print(" - Freestream temperature: %3.13f [K]" % temperature)
 
 # the dimensional pressure we initialize the flow with
 R_gas = 287.057 # J/kg/K
@@ -64,8 +64,8 @@ print(" ")
 print("----------------------------------------------------------------------------")
 print("Similarity parameters for the nondimensionalized Navier-Stokes equations:")
 print("----------------------------------------------------------------------------")
-print(" - Reynolds number reference: %f" % reynolds_number_ref)
-print(" - Mach number reference: %0.12f" % mach_number_ref)
+print(" - Reynolds number reference: %4.12f" % reynolds_number_ref)
+print(" - Mach number reference: %0.16f" % mach_number_ref)
 # check that mesh based Reynolds number using reference values is the same as the experiment
 print(" * Mesh based Reynolds number using reference values (must be same as experiment): %f" % (density_ref*mean_velocity*mesh_size/viscosity_ref))
 
@@ -81,5 +81,21 @@ print(" - Nondimensionalized density: %f" % nondim_density)
 print(" - Nondimensionalized mean velocity: %f" % nondim_mean_velocity)
 print(" - Nondimensionalized pressure: %f" % nondim_pressure)
 
+# (3) write all the values to an output file
+filename = "parameters_for_dhit_setup.txt"
+print(" ")
+print("----------------------------------------------------------------------------")
+print("Writing parameters to file: %s" % filename)
+print("----------------------------------------------------------------------------")
+print("Order of the parameters is listed below: ")
+print("temperature, prandtl_number, reynolds_number_ref, mach_number_ref, nondim_density, nondim_mean_velocity, nondim_pressure")
 n_values = 7
 values_for_setup = np.zeros((1,n_values),dtype=np.float64)
+values_for_setup[0,0] = temperature
+values_for_setup[0,1] = prandtl_number
+values_for_setup[0,2] = reynolds_number_ref
+values_for_setup[0,3] = mach_number_ref
+values_for_setup[0,4] = nondim_density
+values_for_setup[0,5] = nondim_mean_velocity
+values_for_setup[0,6] = nondim_pressure
+np.savetxt(filename,values_for_setup)

@@ -31,38 +31,30 @@ def compute_mach_number(primitive_soln):
     mach_number = velocity_magnitude/speed_of_sound
     return mach_number
 
-# Constants
-characteristic_length = 1.0 # L
-
 # Global constants
 global gamma_gas, gamma_gas_minus_one
 gamma_gas = 1.4
 gamma_gas_minus_one = gamma_gas - 1.0
 
-# Set to 1 for box.for code values -- spectra already nondimensionalized
-freestream_velocity = 1.0
-freestream_mach_number = 0.000820634767928
-freestream_mach_number_sqr = freestream_mach_number*freestream_mach_number
-freestream_reynolds_number = 1726.211232508223
-maximum_desired_turbulent_mach_number = 0.1
+maximum_desired_turbulent_mach_number = 0.3
 
-# TO DO: Read in setup_more.dat and assign the following variables
+print(" ")
+print("----------------------------------------------------------------------------")
+print("Nondimensionalized quantities for initializing the flow:")
+print("----------------------------------------------------------------------------")
+temperature, prandtl_number, reynolds_number_ref, mach_number_ref, nondim_density, nondim_mean_velocity, nondim_pressure = \
+    np.loadtxt("parameters_for_dhit_setup.txt",dtype=np.float64,unpack=True)
+nondimensionalized_pressure = 1.0*nondim_pressure
+nondimensionalized_density = 1.0*nondim_density
+nondimensionalized_mean_velocity = 1.0*nondim_mean_velocity
 
-freestream_mach_number = 1.0
-eddy_turnover_time = 1.0
-
-# TO DO: discuss with Brian the proper nondimensionalization
-#        since the Navier-Stokes equations themselves have to
-#        be initialized with nondimensionalized values based
-#        on freestream quantities
-
-# Determine final time for PHiLiP
-nondimensional_eddy_turnover_time = eddy_turnover_time/(characteristic_length/freestream_velocity)
-nondimensionalized_density = 1.0
-nondimensionalized_pressure = 1.0
+print(" - Nondimensionalized density: %f" % nondimensionalized_density)
+print(" - Nondimensionalized mean velocity: %f" % nondimensionalized_mean_velocity)
+print(" - Nondimensionalized pressure: %f" % nondimensionalized_pressure)
 
 # (1) Pre-process file to generate the setup.dat file -- same way the deprecated MATLAB script did
-input_vel_field_file = "velocity_gl_nodes.fld"
+subdir = "dofs024_p5_velocity"
+input_vel_field_file = subdir+"/velocity_gl_nodes.fld"
 input_data = np.loadtxt(input_vel_field_file,dtype=np.float64)
 nDOF_input = input_data.shape[0]
 file = open("setup.dat","w")
@@ -117,17 +109,18 @@ for ez in range(0,nElements_per_direction):
                         # --------------------------------------------------------------------
                         # Primitive solution at current point
                         nondimensionalized_primitive_sol_at_q_point = np.zeros(5,dtype=np.float64)
-                        nondimensionalized_primitive_sol_at_q_point[0] = gamma_gas*freestream_mach_number_sqr*nondimensionalized_pressure # isothermal initialization
+                        nondimensionalized_primitive_sol_at_q_point[0] = nondimensionalized_density
                         nondimensionalized_primitive_sol_at_q_point[4] = nondimensionalized_pressure
-                        # -- Apply freestream non-dimensionalization to velocity components
-                        nondimensionalized_primitive_sol_at_q_point[1] = stored_data[ez,ey,ex,qz,qy,qx,0,3]/freestream_velocity
-                        nondimensionalized_primitive_sol_at_q_point[2] = stored_data[ez,ey,ex,qz,qy,qx,0,4]/freestream_velocity
-                        nondimensionalized_primitive_sol_at_q_point[3] = stored_data[ez,ey,ex,qz,qy,qx,0,5]/freestream_velocity
+                        # - Nondimensionalized velocity components; add nondimensionalized mean velocity to x-component
+                        nondimensionalized_primitive_sol_at_q_point[1] = nondimensionalized_mean_velocity + stored_data[ez,ey,ex,qz,qy,qx,0,3]
+                        nondimensionalized_primitive_sol_at_q_point[2] = stored_data[ez,ey,ex,qz,qy,qx,0,4]
+                        nondimensionalized_primitive_sol_at_q_point[3] = stored_data[ez,ey,ex,qz,qy,qx,0,5]
 
-                        # Check turbulent mach number
+                        # Check turbulent mach number -- may want to remove this
                         mach_number_at_q_point = compute_mach_number(nondimensionalized_primitive_sol_at_q_point)
                         if(mach_number_at_q_point > maximum_desired_turbulent_mach_number):
                             print("Error: a local mach_number exceeds the maximum_desired_turbulent_mach_number")
+                            print("Value: %.3e" % mach_number_at_q_point)
                             print("Aborting...")
                             exit()
 
@@ -146,7 +139,7 @@ file.close()
 #===========================================================
 
 nDOF_per_proc = nDOF/num_procs
-philip_prefix="setup"
+philip_prefix=subdir+"/setup_files/setup"
 
 # TO DO:
 # if(nDOF % nDOFs_per_proc != 0):
