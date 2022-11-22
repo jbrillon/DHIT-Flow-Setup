@@ -1,3 +1,9 @@
 [submodule "submodules/quickplotlib"]
 	path = submodules/quickplotlib
 	url = https://github.com/jbrillon/quickplotlib.git
+	branch = master
+
+[submodule "submodules/Energy_Spectrum"]
+	path = submodules/Energy_Spectrum
+	url = https://github.com/jbrillon/Energy_Spectrum.git
+	branch = repackaged
