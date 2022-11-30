@@ -18,9 +18,9 @@ def get_reduced_nDOF_and_nQuadPoints(nElements_per_direction,poly_degree):
 #               GENERAL VARIABLES
 #*****************************************************
 nValues_per_row = 6 # 3 coords, 3 vel components
-nElements_per_direction = 4
-poly_degree = 5
-num_procs = 8 # number of processors
+nElements_per_direction = 32
+poly_degree = 3
+num_procs = 512 # 1024 # number of processors
 # Get DOF variables
 nElements,nQuadPoints_per_element,nQuadPoints,nDOF,reduced_nQuadPoints,reduced_nDOF = get_DOF_vars(nElements_per_direction,poly_degree)
 #-----------------------------------------------------
