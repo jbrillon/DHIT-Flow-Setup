@@ -4,6 +4,9 @@ import numpy as np
 def convert_gl_to_equidistant_nodes(filename_without_extension,file_extension="dat"):
     input_file = filename_without_extension+"."+file_extension
     output_file = filename_without_extension+"_equidistant."+file_extension 
+
+    print("Creating: %s" % output_file)
+    print("...")
     # data at gl nodes
     raw_data = np.loadtxt(input_file,usecols=(0,1,2,3,4,5),skiprows=1,dtype=np.float64)
 
@@ -285,6 +288,7 @@ def convert_gl_to_equidistant_nodes(filename_without_extension,file_extension="d
                 wstr = " %18.16e %18.16e %18.16e %18.16e %18.16e %18.16e\n" % (Xs[i,j,k],Ys[i,j,k],Zs[i,j,k],Vel2[i,j,k,0],Vel2[i,j,k,1],Vel2[i,j,k,2])
                 file.write(wstr)
     file.close()
+    print("done.")
     return
 
 # filename_without_extension="/Users/Julien/julien_phd/post_processing/data/taylor_green_vortex/2022-11-09_24dofs/viscous_TGV_ILES_cPlus_IR_two_point_flux_dofs024_p5_procs16/flow_field_files/velocity_vorticity-0_reordered"
@@ -298,13 +302,19 @@ def convert_gl_to_equidistant_nodes(filename_without_extension,file_extension="d
 # filename_without_extension="/Users/Julien/DHIT-Flow-Setup/dofs024_p5_velocity/flow_field_files/velocity_vorticity-2_reordered"
 file_extension="dat"
 
-filename_without_extension="/Users/Julien/DHIT-Flow-Setup/dofs128_p3_velocity/flow_field_files/velocity_vorticity-1_reordered"
-convert_gl_to_equidistant_nodes(
-    filename_without_extension,file_extension)
+filename_without_extension = "/Users/Julien/NarvalFiles/2023_AIAA/2022-11-29_DHIT_048dofs/viscous_DHIT_ILES_cDG_IR_two_point_flux_with_l2roe_dissipation_dofs048_p5_procs64/flow_field_files/velocity_vorticity-1_reordered"
+convert_gl_to_equidistant_nodes(filename_without_extension,file_extension)
+filename_without_extension = "/Users/Julien/NarvalFiles/2023_AIAA/2022-11-29_DHIT_048dofs/viscous_DHIT_ILES_cPlus_IR_two_point_flux_dofs048_p5_procs64/flow_field_files/velocity_vorticity-1_reordered"
+convert_gl_to_equidistant_nodes(filename_without_extension,file_extension)
+filename_without_extension = "/Users/Julien/NarvalFiles/2023_AIAA/2022-11-29_DHIT_048dofs/viscous_DHIT_LES_smagorinsky_cDG_IR_two_point_flux_dofs048_p5_procs64/flow_field_files/velocity_vorticity-1_reordered"
+convert_gl_to_equidistant_nodes(filename_without_extension,file_extension)
 
-filename_without_extension="/Users/Julien/DHIT-Flow-Setup/dofs128_p3_velocity/flow_field_files/velocity_vorticity-0_reordered"
-convert_gl_to_equidistant_nodes(
-    filename_without_extension,file_extension)
+filename_without_extension = "/Users/Julien/NarvalFiles/2023_AIAA/2022-11-29_DHIT_048dofs/viscous_DHIT_ILES_cDG_IR_two_point_flux_with_l2roe_dissipation_dofs048_p5_procs64/flow_field_files/velocity_vorticity-0_reordered"
+convert_gl_to_equidistant_nodes(filename_without_extension,file_extension)
+filename_without_extension = "/Users/Julien/NarvalFiles/2023_AIAA/2022-11-29_DHIT_048dofs/viscous_DHIT_ILES_cPlus_IR_two_point_flux_dofs048_p5_procs64/flow_field_files/velocity_vorticity-0_reordered"
+convert_gl_to_equidistant_nodes(filename_without_extension,file_extension)
+filename_without_extension = "/Users/Julien/NarvalFiles/2023_AIAA/2022-11-29_DHIT_048dofs/viscous_DHIT_LES_smagorinsky_cDG_IR_two_point_flux_dofs048_p5_procs64/flow_field_files/velocity_vorticity-0_reordered"
+convert_gl_to_equidistant_nodes(filename_without_extension,file_extension)
 
 exit() # i've already tested that it works
 # ================================================================
