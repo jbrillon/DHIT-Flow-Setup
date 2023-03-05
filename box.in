@@ -1,13 +1,13 @@
 c============== Global Inputs ===================
 c-- Desired task: 0 - Generate velocity; 1 - Extract spectrum
-1
+0
 c-- Grid size in elements
 4
 c-- Polynomial degree of the elements
 5
 c-------------- Generation of velocity ------------------
 c-- Number of modes to take from file with input spectrum
-4
+65
 c-- input file: File with input spectrum
 energy.prf
 c-- output file using equidistant nodes: File with generated 3D velocity field
@@ -16,7 +16,7 @@ c-- output file using Gauss Lobatto nodes: File with generated 3D velocity field
 velocity_gl_nodes.fld
 c-------------- Extraction of spectrum    ------------------
 c-- Number of modes in the output spectrum
-4
+65
 c-- output file: File with output spectrum
 spec.tec
 c-- input file: File with input 3D velocity field

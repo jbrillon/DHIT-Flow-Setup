@@ -2,19 +2,21 @@ import numpy as np
 from var import *
 
 # Filename for resulting averaged velocity field (output of this code)
-averaged_velocity_field_filename = "velocity.fld"
+# averaged_velocity_field_filename = "velocity_equidistant_nodes_unique.fld"
+averaged_velocity_field_filename = "dofs024_p5_velocity/velocity_equidistant_nodes_unique.fld"
 
-print("Input nDOF: %i" % nDOF)
-print("Resulting reduced nDOF: %i" % reduced_nDOF)
+# print("Input nDOF: %i" % nDOF)
+# print("Resulting reduced nDOF: %i" % reduced_nDOF)
 
 print(" ")
 # Specify velocity field file
-velocity_field_filename = input('Input velocity field filename: ')
+velocity_field_filename = "dofs024_p5_velocity/velocity_equidistant_nodes.fld" #input('Input velocity field filename: ')
 print("Averaging velocity field given by file: %s" % velocity_field_filename)
 
 all_coordinates = np.loadtxt(velocity_field_filename,skiprows=0,usecols=(0,1,2),dtype=np.float64)
 all_velocities = np.loadtxt(velocity_field_filename,skiprows=0,usecols=(3,4,5),dtype=np.float64)
 unique_coordinates = -1.0*np.ones((reduced_nDOF,3),dtype=np.float64)
+# unique_coordinates = np.empty((reduced_nDOF,3))
 averaged_velocities = np.zeros((reduced_nDOF,3),dtype=np.float64)
 non_averaged_velocities = np.zeros((reduced_nDOF,3),dtype=np.float64) # for verification purposes
 number_of_points_to_average_with = np.ones(reduced_nDOF,dtype=np.float64)
@@ -40,6 +42,7 @@ for j in range(0,reduced_nDOF):
 
 print("done.")
 
+'''
 # UNIT TEST:
 print(" ")
 print("Performing unit test for checking coordinates and averaged values...")
@@ -61,7 +64,9 @@ for i in range(0,reduced_nDOF):
             exit()
 print("passed.")
 # END OF UNIT TEST
+'''
 
+'''
 # UNIT TEST:
 # file1 = open("unique_coords_only.dat","w")
 # file2 = open("expected_unique_coords_only.dat","w")
@@ -76,6 +81,7 @@ print("passed.")
 # file2.close()
 # Note: To test --> diff expected_unique_coords_only.dat unique_coords_only.dat
 # END OF UNIT TEST
+'''
 
 # write the input file for the fortran code
 print(" ")

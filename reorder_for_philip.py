@@ -53,7 +53,7 @@ print(" - Nondimensionalized mean velocity: %f" % nondimensionalized_mean_veloci
 print(" - Nondimensionalized pressure: %f" % nondimensionalized_pressure)
 
 # (1) Pre-process file to generate the setup.dat file -- same way the deprecated MATLAB script did
-subdir = "dofs024_p5_velocity"
+subdir = "dofs128_p3_velocity"
 input_vel_field_file = subdir+"/velocity_gl_nodes.fld"
 input_data = np.loadtxt(input_vel_field_file,dtype=np.float64)
 nDOF_input = input_data.shape[0]

@@ -6,10 +6,12 @@ from turbulent_flow_3D_data_processor import *
 nElements_per_direction = 8
 poly_degree = 5
 reduced_nQuadPoints, reduced_nDOF = get_reduced_nDOF_and_nQuadPoints(nElements_per_direction,poly_degree)
+print(reduced_nQuadPoints)
 #----------------------------------------------------------------------
 # Generate coordinates
 #----------------------------------------------------------------------
-coordinates1D = np.linspace(0., 2.0*np.pi, num=reduced_nQuadPoints)
+# coordinates1D = np.linspace(0.0, 2.0*np.pi, num=reduced_nQuadPoints)
+coordinates1D = np.linspace(-np.pi, np.pi, num=reduced_nQuadPoints)
 coordinates = np.zeros((reduced_nDOF,3),dtype=np.float64)
 p = 0
 for k in range(0,reduced_nQuadPoints):
@@ -24,9 +26,14 @@ for k in range(0,reduced_nQuadPoints):
 # Set velocity field to TGV as a test
 #----------------------------------------------------------------------
 velocities = np.zeros((reduced_nDOF,3),dtype=np.float64)
+# all_states = np.zeros((reduced_nDOF,5),dtype=np.float64)
 for i in range(0,reduced_nDOF):
     velocities[i,:] = tgv_initial_condition_primitive(coordinates[i])[1:4]
+    # all_states[i,:] = tgv_initial_condition(coordinates[i])
 #----------------------------------------------------------------------
+
+# np.savetxt("minus_pi_to_plus_pi.txt",all_states)
+# exit()
 
 # Get turbulent quantities
 rms_velocity,taylor_micro_scale = \

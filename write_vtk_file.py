@@ -12,8 +12,8 @@ def write_vtk_file_uniform_cube(
     # =============================
     # examples: https://visit-sphinx-github-user-manual.readthedocs.io/en/task-allen-vtk9_master_ospray/data_into_visit/VTKFormat.html
     # official documentation: https://vtk.org/wp-content/uploads/2015/04/file-formats.pdf
-    reduced_nDOF = int(coordinates.shape[0])
-    reduced_nQuadPoints = int(round(reduced_nDOF**(1.0/3.0)))
+    nDOF_total = int(coordinates.shape[0])
+    nDOF_per_dim = int(round(nDOF_total**(1.0/3.0)))
     print("Writing vtk file: %s ... " % filename)
     dataType = "double"
     file = open(filename,"w") # change your vtk file name
@@ -22,27 +22,27 @@ def write_vtk_file_uniform_cube(
     file.write("ASCII\n")
     file.write("DATASET STRUCTURED_GRID\n")
     file.write("\n")
-    file.write("DIMENSIONS %i %i %i\n" % (reduced_nQuadPoints,reduced_nQuadPoints,reduced_nQuadPoints))
-    file.write("POINTS %i %s\n" % (reduced_nDOF,dataType))
-    for i in range(0,reduced_nDOF):
+    file.write("DIMENSIONS %i %i %i\n" % (nDOF_per_dim,nDOF_per_dim,nDOF_per_dim))
+    file.write("POINTS %i %s\n" % (nDOF_total,dataType))
+    for i in range(0,nDOF_total):
         wstr = "%1.15f %1.15f %1.15f\n" % (coordinates[i,0],coordinates[i,1],coordinates[i,2])
         file.write(wstr)
     file.write("\n")
-    file.write("POINT_DATA %i\n" % (reduced_nDOF))
+    file.write("POINT_DATA %i\n" % (nDOF_total))
     # write 3 velocity components
     file.write("SCALARS u %s 1\n" % dataType)
     file.write("LOOKUP_TABLE default\n")
-    for i in range(0,reduced_nDOF):
+    for i in range(0,nDOF_total):
         wstr = "%1.15f\n" % (velocities[i,0])
         file.write(wstr)
     file.write("SCALARS v %s 1\n" % dataType)
     file.write("LOOKUP_TABLE default\n")
-    for i in range(0,reduced_nDOF):
+    for i in range(0,nDOF_total):
         wstr = "%1.15f\n" % (velocities[i,1])
         file.write(wstr)
     file.write("SCALARS w %s 1\n" % dataType)
     file.write("LOOKUP_TABLE default\n")
-    for i in range(0,reduced_nDOF):
+    for i in range(0,nDOF_total):
         wstr = "%1.15f\n" % (velocities[i,2])
         file.write(wstr)
     # write additional scalars
@@ -54,12 +54,12 @@ def write_vtk_file_uniform_cube(
                 name = additional_scalars_names[j]
                 file.write("SCALARS %s %s 1\n" % (name,dataType))
                 file.write("LOOKUP_TABLE default\n")
-                for i in range(0,reduced_nDOF):
+                for i in range(0,nDOF_total):
                     wstr = "%1.15f\n" % (values[i])
                     file.write(wstr)
     # write velocity vector
     file.write("VECTORS velocity %s\n" % dataType)
-    for i in range(0,reduced_nDOF):
+    for i in range(0,nDOF_total):
         wstr = "%1.15f %1.15f %1.15f\n" % (velocities[i,0],velocities[i,1],velocities[i,2])
         file.write(wstr)
     file.close()

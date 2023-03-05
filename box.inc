@@ -2,7 +2,7 @@
 
         integer      MaxK, MaxIn, MaxG
 
-        parameter(   MaxK = 32,
+        parameter(   MaxK = 65,
      ,               MaxIn = 1001,
      ,               MaxG = 128 )
 
