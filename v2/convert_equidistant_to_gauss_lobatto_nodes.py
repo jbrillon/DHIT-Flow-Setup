@@ -10,8 +10,9 @@ def convert_equidistant_to_gauss_lobatto_nodes(
     output_filename="velocity_gl_nodes.fld",
     test_reading=False
     ):
-    # data at equidistant nodes
-    # equidistant_data_filename = "velocity_equidistant_nodes.fld"
+
+    # future work: print progress in terms of iDOF/nDOF ever x steps or print the percentage complete
+    # this will be slow when doing high DOFs
 
     nDOF_expected = np.loadtxt(equidistant_data_filename,skiprows=0,max_rows=1,dtype=np.float64)#raw_data.shape[0]
     if(nDOF!=nDOF_expected):

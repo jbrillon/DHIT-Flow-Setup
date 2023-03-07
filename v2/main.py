@@ -1,6 +1,7 @@
 import numpy as np
 import sys; sys.path.append("../submodules/TurboGenPY"); import TurboGenPY_HighOrderFEM as turboFEM
 import convert_equidistant_to_gauss_lobatto_nodes as eq2gll
+import flow_parameter_calc as fpc
 # import sys; sys.path.append("../submodules/quickplotlib/lib"); import quickplotlib as qp
 #-----------------------------------------------------
 def get_DOF_vars(nElements_per_direction,poly_degree):
@@ -28,29 +29,9 @@ nElements_per_direction = 4 # number of elements in each direction/dimension
 poly_degree = 5 # solution polynomial degree
 num_procs = 64 # 1024 # number of mpi processors to run PHiLiP with
 output_directory = "./"
+spectra_name='ml'
 # Get DOF variables
 nElements,nQuadPoints_per_element,nQuadPoints,nDOF,reduced_nQuadPoints,reduced_nDOF = get_DOF_vars(nElements_per_direction,poly_degree)
-#-----------------------------------------------------
-# Fixed variables
-#-----------------------------------------------------
-nLoops = 8
-loop_bounds = np.ones(nLoops,dtype=np.int64)
-if(nElements_per_direction>=4):
-    loop_bounds[0] = 2
-if(nElements_per_direction>=8):
-    loop_bounds[1] = 2
-if(nElements_per_direction>=16):
-    loop_bounds[2] = 2
-if(nElements_per_direction>=32):
-    loop_bounds[3] = 2
-if(nElements_per_direction>=64):
-    loop_bounds[4] = 2
-if(nElements_per_direction>=128):
-    loop_bounds[5] = 2
-if(nElements_per_direction>=256):
-    loop_bounds[6] = 2
-if(nElements_per_direction>=512):
-    loop_bounds[7] = 2
 #-----------------------------------------------------
 #=====================================================
 # Generate iso turb files for PHiLiP code
@@ -63,7 +44,7 @@ turboFEM.generate_isotropic_turbulence_high_order_fem(
     poly_degree,
     output_filename=(output_directory+"velocity_equidistant_nodes.fld"),
     number_of_modes=5000, # suggested in TurboGenPY paper
-    spectra_name='ml'
+    spectra_name=spectra_name
     )
 
 # convert to GLL nodes
@@ -79,5 +60,4 @@ eq2gll.convert_equidistant_to_gauss_lobatto_nodes(
     )
 
 # run the ML scaling calc
-
-
+fpc.determine_flow_parameters(spectra_name=spectra_name,filename=(output_directory+"parameters_for_dhit_setup.txt"))

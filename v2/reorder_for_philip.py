@@ -33,240 +33,272 @@ def compute_mach_number(primitive_soln):
 
 # Global constants
 global gamma_gas, gamma_gas_minus_one
-gamma_gas = 1.4
-gamma_gas_minus_one = gamma_gas - 1.0
 
-maximum_desired_turbulent_mach_number = 0.3
+def generate_philip_input_files(
+    nElements_per_direction,
+    nQuadPoints_per_element,
+    nValues_per_row,
+    nDOF,
+    num_procs,
+    flow_parameters_file="parameters_for_dhit_setup.txt",
+    output_dir="./",
+    input_vel_field_filename="velocity_gl_nodes.fld"):
+    #-----------------------------------------------------
+    # Fixed variable
+    #-----------------------------------------------------
+    nLoops = 8
+    loop_bounds = np.ones(nLoops,dtype=np.int64)
+    if(nElements_per_direction>=4):
+        loop_bounds[0] = 2
+    if(nElements_per_direction>=8):
+        loop_bounds[1] = 2
+    if(nElements_per_direction>=16):
+        loop_bounds[2] = 2
+    if(nElements_per_direction>=32):
+        loop_bounds[3] = 2
+    if(nElements_per_direction>=64):
+        loop_bounds[4] = 2
+    if(nElements_per_direction>=128):
+        loop_bounds[5] = 2
+    if(nElements_per_direction>=256):
+        loop_bounds[6] = 2
+    if(nElements_per_direction>=512):
+        loop_bounds[7] = 2
+    #-----------------------------------------------------
+    global gamma_gas, gamma_gas_minus_one
+    gamma_gas = 1.4
+    gamma_gas_minus_one = gamma_gas - 1.0
+    #-----------------------------------------------------
+    maximum_desired_turbulent_mach_number = 0.3
 
-print(" ")
-print("----------------------------------------------------------------------------")
-print("Nondimensionalized quantities for initializing the flow:")
-print("----------------------------------------------------------------------------")
-temperature, prandtl_number, reynolds_number_ref, mach_number_ref, nondim_density, nondim_mean_velocity, nondim_pressure = \
-    np.loadtxt("parameters_for_dhit_setup.txt",dtype=np.float64,unpack=True)
-nondimensionalized_pressure = 1.0*nondim_pressure
-nondimensionalized_density = 1.0*nondim_density
-nondimensionalized_mean_velocity = 1.0*nondim_mean_velocity
+    print(" ")
+    print("----------------------------------------------------------------------------")
+    print("Nondimensionalized quantities for initializing the flow:")
+    print("----------------------------------------------------------------------------")
+    temperature, prandtl_number, reynolds_number_ref, mach_number_ref, nondim_density, nondim_mean_velocity, nondim_pressure = \
+        np.loadtxt(flow_parameters_file,dtype=np.float64,unpack=True)
+    nondimensionalized_pressure = 1.0*nondim_pressure
+    nondimensionalized_density = 1.0*nondim_density
+    nondimensionalized_mean_velocity = 1.0*nondim_mean_velocity
 
-print(" - Nondimensionalized density: %f" % nondimensionalized_density)
-print(" - Nondimensionalized mean velocity: %f" % nondimensionalized_mean_velocity)
-print(" - Nondimensionalized pressure: %f" % nondimensionalized_pressure)
+    print(" - Nondimensionalized density: %f" % nondimensionalized_density)
+    print(" - Nondimensionalized mean velocity: %f" % nondimensionalized_mean_velocity)
+    print(" - Nondimensionalized pressure: %f" % nondimensionalized_pressure)
 
-# (1) Pre-process file to generate the setup.dat file -- same way the deprecated MATLAB script did
-subdir = "dofs128_p3_velocity"
-input_vel_field_file = subdir+"/velocity_gl_nodes.fld"
-input_data = np.loadtxt(input_vel_field_file,dtype=np.float64)
-nDOF_input = input_data.shape[0]
-file = open("setup.dat","w")
-# file.write('Number of degrees of freedom:\n')
-wstr = "%i\n" % nDOF_input
-file.write(wstr)
-i = 0
-for i in range(0,nDOF_input):
-    wstr = "%18.16e %18.16e %18.16e %18.16e %18.16e %18.16e\n" % \
-            (input_data[i,0],input_data[i,1],\
-                input_data[i,2],input_data[i,3],\
-                input_data[i,4],input_data[i,5])
+    # (1) Pre-process file to generate the setup.dat file -- same way the deprecated MATLAB script did
+    input_vel_field_file = output_dir+"/"+input_vel_field_filename
+    input_data = np.loadtxt(input_vel_field_file,skiprows=1,dtype=np.float64)
+    nDOF_input = np.loadtxt(input_vel_field_file,max_rows=1,dtype='int')
+    file = open(output_dir+"/"+"setup.dat","w")
+    # file.write('Number of degrees of freedom:\n')
+    wstr = "%i\n" % nDOF_input
     file.write(wstr)
-file.close()
+    i = 0
+    for i in range(0,nDOF_input):
+        wstr = "%18.16e %18.16e %18.16e %18.16e %18.16e %18.16e\n" % \
+                (input_data[i,0],input_data[i,1],\
+                    input_data[i,2],input_data[i,3],\
+                    input_data[i,4],input_data[i,5])
+        file.write(wstr)
+    file.close()
 
-# (2) Read in the data from setup.dat
-nDOF_expected = np.loadtxt("setup.dat",max_rows=1,dtype='int')
-if(nDOF!=nDOF_expected):
-    print("Error: nDOF does not match expected nDOF from file, check var.py")
-    print("Aborting...")
-    exit()
+    # (2) Read in the data from setup.dat
+    nDOF_expected = np.loadtxt(output_dir+"/"+"setup.dat",max_rows=1,dtype='int')
+    if(nDOF!=nDOF_expected):
+        print("Error: nDOF does not match expected nDOF from file, check var.py")
+        print("Aborting...")
+        exit()
 
-raw_data = np.loadtxt("setup.dat",skiprows=1,dtype=np.float64)
+    raw_data = np.loadtxt(output_dir+"/"+"setup.dat",skiprows=1,dtype=np.float64)
 
-stored_data = np.zeros((nElements_per_direction,nElements_per_direction,nElements_per_direction,nQuadPoints_per_element,nQuadPoints_per_element,nQuadPoints_per_element,1,nValues_per_row),dtype=np.float64)
-nondimensionalized_conservative_solution = np.zeros((nElements_per_direction,nElements_per_direction,nElements_per_direction,nQuadPoints_per_element,nQuadPoints_per_element,nQuadPoints_per_element,1,5),dtype=np.float64)
+    stored_data = np.zeros((nElements_per_direction,nElements_per_direction,nElements_per_direction,nQuadPoints_per_element,nQuadPoints_per_element,nQuadPoints_per_element,1,nValues_per_row),dtype=np.float64)
+    nondimensionalized_conservative_solution = np.zeros((nElements_per_direction,nElements_per_direction,nElements_per_direction,nQuadPoints_per_element,nQuadPoints_per_element,nQuadPoints_per_element,1,5),dtype=np.float64)
 
-file = open("read_test.dat","w")
-# file.write('Number of degrees of freedom:\n')
-wstr = "%i\n" % nDOF
-file.write(wstr)
-i = 0
-for ez in range(0,nElements_per_direction):
-    for qz in range(0,nQuadPoints_per_element):
-        for ey in range(0,nElements_per_direction):
-            for qy in range(0,nQuadPoints_per_element):
-                for ex in range(0,nElements_per_direction):
-                    for qx in range(0,nQuadPoints_per_element):
-                        row_data = raw_data[i,:]
-                        for iValue in range(0,nValues_per_row):
-                            stored_data[ez,ey,ex,qz,qy,qx,0,iValue] = row_data[iValue]
+    file = open(output_dir+"/"+"read_test.dat","w")
+    # file.write('Number of degrees of freedom:\n') # leave uncommented or will have to update philip
+    wstr = "%i\n" % nDOF
+    file.write(wstr)
+    i = 0
+    for ez in range(0,nElements_per_direction):
+        for qz in range(0,nQuadPoints_per_element):
+            for ey in range(0,nElements_per_direction):
+                for qy in range(0,nQuadPoints_per_element):
+                    for ex in range(0,nElements_per_direction):
+                        for qx in range(0,nQuadPoints_per_element):
+                            row_data = raw_data[i,:]
+                            for iValue in range(0,nValues_per_row):
+                                stored_data[ez,ey,ex,qz,qy,qx,0,iValue] = row_data[iValue]
 
-                        wstr = "%18.16e %18.16e %18.16e %18.16e %18.16e %18.16e\n" % \
-                                (stored_data[ez,ey,ex,qz,qy,qx,0,0],stored_data[ez,ey,ex,qz,qy,qx,0,1],\
-                                    stored_data[ez,ey,ex,qz,qy,qx,0,2],stored_data[ez,ey,ex,qz,qy,qx,0,3],\
-                                    stored_data[ez,ey,ex,qz,qy,qx,0,4],stored_data[ez,ey,ex,qz,qy,qx,0,5])
-                        file.write(wstr)
-                        i += 1
+                            wstr = "%18.16e %18.16e %18.16e %18.16e %18.16e %18.16e\n" % \
+                                    (stored_data[ez,ey,ex,qz,qy,qx,0,0],stored_data[ez,ey,ex,qz,qy,qx,0,1],\
+                                        stored_data[ez,ey,ex,qz,qy,qx,0,2],stored_data[ez,ey,ex,qz,qy,qx,0,3],\
+                                        stored_data[ez,ey,ex,qz,qy,qx,0,4],stored_data[ez,ey,ex,qz,qy,qx,0,5])
+                            file.write(wstr)
+                            i += 1
 
-                        # ------------------------------ START -------------------------------
-                        # ON THE FLY PRE-PROCESSING
-                        # --------------------------------------------------------------------
-                        # Primitive solution at current point
-                        nondimensionalized_primitive_sol_at_q_point = np.zeros(5,dtype=np.float64)
-                        nondimensionalized_primitive_sol_at_q_point[0] = nondimensionalized_density
-                        nondimensionalized_primitive_sol_at_q_point[4] = nondimensionalized_pressure
-                        # - Nondimensionalized velocity components; add nondimensionalized mean velocity to x-component
-                        nondimensionalized_primitive_sol_at_q_point[1] = nondimensionalized_mean_velocity + stored_data[ez,ey,ex,qz,qy,qx,0,3]
-                        nondimensionalized_primitive_sol_at_q_point[2] = stored_data[ez,ey,ex,qz,qy,qx,0,4]
-                        nondimensionalized_primitive_sol_at_q_point[3] = stored_data[ez,ey,ex,qz,qy,qx,0,5]
+                            # ------------------------------ START -------------------------------
+                            # ON THE FLY PRE-PROCESSING
+                            # --------------------------------------------------------------------
+                            # Primitive solution at current point
+                            nondimensionalized_primitive_sol_at_q_point = np.zeros(5,dtype=np.float64)
+                            nondimensionalized_primitive_sol_at_q_point[0] = nondimensionalized_density
+                            nondimensionalized_primitive_sol_at_q_point[4] = nondimensionalized_pressure
+                            # - Nondimensionalized velocity components; add nondimensionalized mean velocity to x-component
+                            nondimensionalized_primitive_sol_at_q_point[1] = nondimensionalized_mean_velocity + stored_data[ez,ey,ex,qz,qy,qx,0,3] # TO DO: Confirm that TurboGenPY is indeed fluctuations!!
+                            nondimensionalized_primitive_sol_at_q_point[2] = stored_data[ez,ey,ex,qz,qy,qx,0,4]
+                            nondimensionalized_primitive_sol_at_q_point[3] = stored_data[ez,ey,ex,qz,qy,qx,0,5]
 
-                        # Check turbulent mach number -- may want to remove this
-                        mach_number_at_q_point = compute_mach_number(nondimensionalized_primitive_sol_at_q_point)
-                        if(mach_number_at_q_point > maximum_desired_turbulent_mach_number):
-                            print("Error: a local mach_number exceeds the maximum_desired_turbulent_mach_number")
-                            print("Value: %.3e" % mach_number_at_q_point)
-                            print("Aborting...")
-                            exit()
+                            # Check turbulent mach number -- may want to remove this
+                            mach_number_at_q_point = compute_mach_number(nondimensionalized_primitive_sol_at_q_point)
+                            if(mach_number_at_q_point > maximum_desired_turbulent_mach_number):
+                                print("Error: a local mach_number exceeds the maximum_desired_turbulent_mach_number")
+                                print("Value: %.3e" % mach_number_at_q_point)
+                                print("Aborting...")
+                                exit()
 
 
-                        # Conservative solution at current point
-                        nondimensionalized_conservative_sol_at_q_point = 1.0*get_conservative_from_primitive(nondimensionalized_primitive_sol_at_q_point)
-                        # Store conservative solution
-                        for state in range(0,5):
-                            nondimensionalized_conservative_solution[ez,ey,ex,qz,qy,qx,0,state] = 1.0*nondimensionalized_conservative_sol_at_q_point[state]
-                        # ------------------------------- END --------------------------------
-file.close()
-# NOTE: Do 'diff read_test.dat setup.dat' to make sure we're reading this properly
+                            # Conservative solution at current point
+                            nondimensionalized_conservative_sol_at_q_point = 1.0*get_conservative_from_primitive(nondimensionalized_primitive_sol_at_q_point)
+                            # Store conservative solution
+                            for state in range(0,5):
+                                nondimensionalized_conservative_solution[ez,ey,ex,qz,qy,qx,0,state] = 1.0*nondimensionalized_conservative_sol_at_q_point[state]
+                            # ------------------------------- END --------------------------------
+    file.close()
+    # NOTE: Do 'diff read_test.dat setup.dat' to make sure we're reading this properly
+    # TO DO: The line above could be made a parameter like "test_reading" or something so that we can turn it on/off
+    #===========================================================
+    #                 REORDER DATA FOR PHiLiP
+    #===========================================================
 
-#===========================================================
-#                 REORDER DATA FOR PHiLiP
-#===========================================================
+    nDOF_per_proc = nDOF/num_procs
+    philip_prefix=output_dir+"/"+"setup_files/setup" # TO DO: create the directory within this python script
 
-nDOF_per_proc = nDOF/num_procs
-philip_prefix=subdir+"/setup_files/setup"
+    # TO DO:
+    # if(nDOF % nDOFs_per_proc != 0):
+    #     print("ERROR: Must use a number of processors that evenly divides the domain ")
 
-# TO DO:
-# if(nDOF % nDOFs_per_proc != 0):
-#     print("ERROR: Must use a number of processors that evenly divides the ")
+    file = open(output_dir+"/"+"reordered_data.dat","w")
+    wstr = "%i\n" % nDOF
+    file.write(wstr)
 
-file = open("reordered_data.dat","w")
-wstr = "%i\n" % nDOF
-file.write(wstr)
+    ''' must add more nested for loops for higher
+        number of elements per direction
+        currently can handle up to 32 (i.e. 2,4,8,16,32)
+    '''
 
-''' must add more nested for loops for higher
-    number of elements per direction
-    currently can handle up to 32 (i.e. 2,4,8,16,32)
-'''
+    if(nElements_per_direction>32):
+        print("ERROR: Currently can only handle up to 32 elements per direction. ")
+        print("Must add more nested for loops for higher number of elements per direction. ")
+        print("Aborting...")
+        exit()
 
-if(nElements_per_direction>32):
-    print("ERROR: Currently can only handle up to 32 elements per direction. ")
-    print("Must add more nested for loops for higher number of elements per direction. ")
-    print("Aborting...")
-    exit()
+    iproc = 0
+    iDOF_per_proc = 0
+    start_new_file=True
 
-iproc = 0
-iDOF_per_proc = 0
-start_new_file=True
-
-ez_L_base_base_base = 0
-for z_base_base_base in range(0,loop_bounds[3]):
-    ey_L_base_base_base = 0
-    for y_base_base_base in range(0,loop_bounds[3]):
-        ex_L_base_base_base = 0
-        for x_base_base_base in range(0,loop_bounds[3]):
-            ez_L_base_base = ez_L_base_base_base
-            for z_base_base in range(0,loop_bounds[2]):
-                ey_L_base_base = ey_L_base_base_base
-                for y_base_base in range(0,loop_bounds[2]):
-                    ex_L_base_base = ex_L_base_base_base
-                    for x_base_base in range(0,loop_bounds[2]):
-                        ez_L_base = ez_L_base_base
-                        for z_base in range(0,loop_bounds[1]):
-                            ey_L_base = ey_L_base_base
-                            for y_base in range(0,loop_bounds[1]):
-                                ex_L_base = ex_L_base_base
-                                for x_base in range(0,loop_bounds[1]):
-                                    # algorithm for a cube with 64 (4^3) elements:
-                                    ez_L = ez_L_base
-                                    for cz in range(0,loop_bounds[0]):
-                                        ez_R = ez_L + 1
-                                        ey_L = ey_L_base
-                                        for cy in range(0,loop_bounds[0]):
-                                            ey_R = ey_L + 1
-                                            ex_L = ex_L_base
-                                            for cx in range(0,loop_bounds[0]):
-                                                ex_R = ex_L + 1
-                                                for ez in range(ez_L,ez_R+1):
-                                                    for ey in range(ey_L,ey_R+1):
-                                                        for ex in range(ex_L,ex_R+1):
-                                                            for qz in range(0,nQuadPoints_per_element):
-                                                                for qy in range(0,nQuadPoints_per_element):
-                                                                    for qx in range(0,nQuadPoints_per_element):
-                                                                        # wstr = "%i %i %i \n" % (ex,ey,ez)
-                                                                        # wstr = "%18.16e %18.16e %18.16e %18.16e %18.16e %18.16e\n" % \
-                                                                        #         (stored_data[ez,ey,ex,qz,qy,qx,0,0],stored_data[ez,ey,ex,qz,qy,qx,0,1],\
-                                                                        #             stored_data[ez,ey,ex,qz,qy,qx,0,2],stored_data[ez,ey,ex,qz,qy,qx,0,3],\
-                                                                        #             stored_data[ez,ey,ex,qz,qy,qx,0,4],stored_data[ez,ey,ex,qz,qy,qx,0,5])
-                                                                        wstr = "%18.16e %18.16e %18.16e \n" % \
-                                                                                (stored_data[ez,ey,ex,qz,qy,qx,0,0],stored_data[ez,ey,ex,qz,qy,qx,0,1],\
-                                                                                    stored_data[ez,ey,ex,qz,qy,qx,0,2])
-                                                                        file.write(wstr)
-
-                                                            for state in range(0,5):
+    ez_L_base_base_base = 0
+    for z_base_base_base in range(0,loop_bounds[3]):
+        ey_L_base_base_base = 0
+        for y_base_base_base in range(0,loop_bounds[3]):
+            ex_L_base_base_base = 0
+            for x_base_base_base in range(0,loop_bounds[3]):
+                ez_L_base_base = ez_L_base_base_base
+                for z_base_base in range(0,loop_bounds[2]):
+                    ey_L_base_base = ey_L_base_base_base
+                    for y_base_base in range(0,loop_bounds[2]):
+                        ex_L_base_base = ex_L_base_base_base
+                        for x_base_base in range(0,loop_bounds[2]):
+                            ez_L_base = ez_L_base_base
+                            for z_base in range(0,loop_bounds[1]):
+                                ey_L_base = ey_L_base_base
+                                for y_base in range(0,loop_bounds[1]):
+                                    ex_L_base = ex_L_base_base
+                                    for x_base in range(0,loop_bounds[1]):
+                                        # algorithm for a cube with 64 (4^3) elements:
+                                        ez_L = ez_L_base
+                                        for cz in range(0,loop_bounds[0]):
+                                            ez_R = ez_L + 1
+                                            ey_L = ey_L_base
+                                            for cy in range(0,loop_bounds[0]):
+                                                ey_R = ey_L + 1
+                                                ex_L = ex_L_base
+                                                for cx in range(0,loop_bounds[0]):
+                                                    ex_R = ex_L + 1
+                                                    for ez in range(ez_L,ez_R+1):
+                                                        for ey in range(ey_L,ey_R+1):
+                                                            for ex in range(ex_L,ex_R+1):
                                                                 for qz in range(0,nQuadPoints_per_element):
                                                                     for qy in range(0,nQuadPoints_per_element):
                                                                         for qx in range(0,nQuadPoints_per_element):
-                                                                            if(state==0 and start_new_file):
-                                                                                padded_mpi_rank_string = get_padded_mpi_rank_string(iproc)
-                                                                                filename_for_philip="%s-%s.dat" % (philip_prefix,padded_mpi_rank_string)
-                                                                                file_for_philip = open(filename_for_philip,"w")
-                                                                                wstr = "%i\n" % nDOF
-                                                                                file_for_philip.write(wstr)
-                                                                                start_new_file=False
+                                                                            # wstr = "%i %i %i \n" % (ex,ey,ez)
+                                                                            # wstr = "%18.16e %18.16e %18.16e %18.16e %18.16e %18.16e\n" % \
+                                                                            #         (stored_data[ez,ey,ex,qz,qy,qx,0,0],stored_data[ez,ey,ex,qz,qy,qx,0,1],\
+                                                                            #             stored_data[ez,ey,ex,qz,qy,qx,0,2],stored_data[ez,ey,ex,qz,qy,qx,0,3],\
+                                                                            #             stored_data[ez,ey,ex,qz,qy,qx,0,4],stored_data[ez,ey,ex,qz,qy,qx,0,5])
+                                                                            wstr = "%18.16e %18.16e %18.16e \n" % \
+                                                                                    (stored_data[ez,ey,ex,qz,qy,qx,0,0],stored_data[ez,ey,ex,qz,qy,qx,0,1],\
+                                                                                        stored_data[ez,ey,ex,qz,qy,qx,0,2])
+                                                                            file.write(wstr)
 
-                                                                            wstr2 = "%18.16e %18.16e %18.16e %i %18.16e\n" % \
-                                                                                    (stored_data[ez,ey,ex,qz,qy,qx,0,0],\
-                                                                                        stored_data[ez,ey,ex,qz,qy,qx,0,1],\
-                                                                                        stored_data[ez,ey,ex,qz,qy,qx,0,2],\
-                                                                                        state,\
-                                                                                        nondimensionalized_conservative_solution[ez,ey,ex,qz,qy,qx,0,state])
-                                                                            file_for_philip.write(wstr2)
+                                                                for state in range(0,5):
+                                                                    for qz in range(0,nQuadPoints_per_element):
+                                                                        for qy in range(0,nQuadPoints_per_element):
+                                                                            for qx in range(0,nQuadPoints_per_element):
+                                                                                if(state==0 and start_new_file):
+                                                                                    padded_mpi_rank_string = get_padded_mpi_rank_string(iproc)
+                                                                                    filename_for_philip="%s-%s.dat" % (philip_prefix,padded_mpi_rank_string)
+                                                                                    file_for_philip = open(filename_for_philip,"w")
+                                                                                    wstr = "%i\n" % nDOF
+                                                                                    file_for_philip.write(wstr)
+                                                                                    start_new_file=False
 
-                                                                            if(state==4):
-                                                                                iDOF_per_proc += 1
+                                                                                wstr2 = "%18.16e %18.16e %18.16e %i %18.16e\n" % \
+                                                                                        (stored_data[ez,ey,ex,qz,qy,qx,0,0],\
+                                                                                            stored_data[ez,ey,ex,qz,qy,qx,0,1],\
+                                                                                            stored_data[ez,ey,ex,qz,qy,qx,0,2],\
+                                                                                            state,\
+                                                                                            nondimensionalized_conservative_solution[ez,ey,ex,qz,qy,qx,0,state])
+                                                                                file_for_philip.write(wstr2)
 
-                                                                            if(state==4 and (iDOF_per_proc == nDOF_per_proc)):
-                                                                                file_for_philip.close()
-                                                                                iDOF_per_proc = 0
-                                                                                iproc += 1
-                                                                                start_new_file=True
+                                                                                if(state==4):
+                                                                                    iDOF_per_proc += 1
 
-                                                ex_L += 2
-                                            ey_L += 2
-                                        ez_L += 2
-                                    ex_L_base = ex_L
-                                ey_L_base = ey_L
-                            ez_L_base = ez_L
-                        ex_L_base_base = ex_L_base
-                    ey_L_base_base = ey_L_base
-                ez_L_base_base = ez_L_base
-            ex_L_base_base_base = ex_L_base_base
-        ey_L_base_base_base = ey_L_base_base
-    ez_L_base_base_base = ez_L_base_base
+                                                                                if(state==4 and (iDOF_per_proc == nDOF_per_proc)):
+                                                                                    file_for_philip.close()
+                                                                                    iDOF_per_proc = 0
+                                                                                    iproc += 1
+                                                                                    start_new_file=True
 
-file.close()
-exit()
-# ================================================================
-# check that it works
-# ================================================================
-data_dir = "philip_outputs/"
-# filename="1procs/coord_check_%i_elements_p%i-proc_0.txt" % (nElements_per_direction,poly_degree)
-filename="8procs/assembled_coords.txt"
-philip_data = np.loadtxt(data_dir + filename,skiprows=1,dtype=np.float64)
-reordered_data = np.loadtxt("reordered_data.dat",skiprows=1,dtype=np.float64)
-file = open("check_reordering_vs_philip_output.dat","w")
-for i in range(0,nDOF):
-    check = reordered_data[i,:]
-    ref = philip_data[i,:]
-    err = np.linalg.norm(check-ref)
-    if(err > 2.0e-15):
-        err_msg = "%i %18.16e \n" % (i,err)
-        file.write(err_msg)
-file.close()
-# ================================================================
+                                                    ex_L += 2
+                                                ey_L += 2
+                                            ez_L += 2
+                                        ex_L_base = ex_L
+                                    ey_L_base = ey_L
+                                ez_L_base = ez_L
+                            ex_L_base_base = ex_L_base
+                        ey_L_base_base = ey_L_base
+                    ez_L_base_base = ez_L_base
+                ex_L_base_base_base = ex_L_base_base
+            ey_L_base_base_base = ey_L_base_base
+        ez_L_base_base_base = ez_L_base_base
+
+    file.close()
+    # exit()
+    # # ================================================================
+    # # check that it works
+    # # ================================================================
+    # data_dir = "philip_outputs/"
+    # # filename="1procs/coord_check_%i_elements_p%i-proc_0.txt" % (nElements_per_direction,poly_degree)
+    # filename="8procs/assembled_coords.txt"
+    # philip_data = np.loadtxt(data_dir + filename,skiprows=1,dtype=np.float64)
+    # reordered_data = np.loadtxt("reordered_data.dat",skiprows=1,dtype=np.float64)
+    # file = open("check_reordering_vs_philip_output.dat","w")
+    # for i in range(0,nDOF):
+    #     check = reordered_data[i,:]
+    #     ref = philip_data[i,:]
+    #     err = np.linalg.norm(check-ref)
+    #     if(err > 2.0e-15):
+    #         err_msg = "%i %18.16e \n" % (i,err)
+    #         file.write(err_msg)
+    # file.close()
+    # # ================================================================
