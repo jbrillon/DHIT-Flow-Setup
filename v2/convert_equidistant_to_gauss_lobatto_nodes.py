@@ -300,6 +300,8 @@ def convert_equidistant_to_gauss_lobatto_nodes(
 
     # WRITE TO FILE
     file = open(output_filename,"w")
+    wstr = "%i\n" % nDOF
+    file.write(wstr)
     for k in range(Nk1-1, Nk2):
         for j in range(Nj1-1, Nj2):
             for i in range(Ni1-1, Ni2):

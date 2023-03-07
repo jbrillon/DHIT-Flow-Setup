@@ -1,5 +1,6 @@
 import numpy as np
 import sys; sys.path.append("../submodules/TurboGenPY"); import TurboGenPY_HighOrderFEM as turboFEM
+import convert_equidistant_to_gauss_lobatto_nodes as eq2gll
 # import sys; sys.path.append("../submodules/quickplotlib/lib"); import quickplotlib as qp
 #-----------------------------------------------------
 def get_DOF_vars(nElements_per_direction,poly_degree):
@@ -66,7 +67,7 @@ turboFEM.generate_isotropic_turbulence_high_order_fem(
     )
 
 # convert to GLL nodes
-convert_equidistant_to_gauss_lobatto_nodes(
+eq2gll.convert_equidistant_to_gauss_lobatto_nodes(
     (output_directory+"velocity_equidistant_nodes.fld"),
     nElements_per_direction,
     nQuadPoints_per_element,
@@ -74,8 +75,9 @@ convert_equidistant_to_gauss_lobatto_nodes(
     poly_degree,
     nDOF,
     output_filename=(output_directory+"velocity_gl_nodes.fld"),
-    test_reading=True
+    test_reading=False # set a true if testing that this function works
     )
 
-# 
+# run the ML scaling calc
+
 
