@@ -26,7 +26,7 @@ mu = 1.0*viscosity
 
 print(" ")
 print("----------------------------------------------------------------------------")
-print("Determined temperature, pressure, and Prandtl number from experiment")
+print("Determined temperature, pressure, and Prandtl number from experiment:")
 print("----------------------------------------------------------------------------")
 
 # the dimensional reference (i.e. freestream temperature)

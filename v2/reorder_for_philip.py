@@ -154,6 +154,12 @@ file.write(wstr)
     currently can handle up to 32 (i.e. 2,4,8,16,32)
 '''
 
+if(nElements_per_direction>32):
+    print("ERROR: Currently can only handle up to 32 elements per direction. ")
+    print("Must add more nested for loops for higher number of elements per direction. ")
+    print("Aborting...")
+    exit()
+
 iproc = 0
 iDOF_per_proc = 0
 start_new_file=True
