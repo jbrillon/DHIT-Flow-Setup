@@ -37,7 +37,6 @@ nElements,nQuadPoints_per_element,nQuadPoints,nDOF,reduced_nQuadPoints,reduced_n
 # Generate iso turb files for PHiLiP code
 #=====================================================
 
-import os; print(os.getcwd())
 # generate the velocity flow field
 turboFEM.generate_isotropic_turbulence_high_order_fem(
     nElements_per_direction,

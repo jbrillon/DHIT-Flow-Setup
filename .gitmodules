@@ -12,3 +12,6 @@
 	path = submodules/TurboGenPY
 	url = https://github.com/jbrillon/TurboGenPY.git
 	branch = development
+[submodule "submodules/PHiLiP-Post-Processing"]
+	path = submodules/PHiLiP-Post-Processing
+	url = git@github.com:jbrillon/PHiLiP-Post-Processing.git
