@@ -26,8 +26,8 @@ def get_reduced_nDOF_and_nQuadPoints(nElements_per_direction,poly_degree):
 # INPUTS
 #=====================================================
 nValues_per_row = 6 # 3 coords, 3 vel components
-nElements_per_direction = 32 # number of elements in each direction/dimension
-poly_degree = 3 # solution polynomial degree
+nElements_per_direction = 8 # number of elements in each direction/dimension
+poly_degree = 5 # solution polynomial degree
 num_procs = 64 # 1024 # number of mpi processors to run PHiLiP with
 output_directory = "./"
 spectra_name='ml'
@@ -43,7 +43,7 @@ turboFEM.generate_isotropic_turbulence_high_order_fem(
     nElements_per_direction,
     poly_degree,
     output_filename=(output_directory+"velocity_equidistant_nodes.fld"),
-    number_of_modes=5000, # suggested in TurboGenPY paper
+    number_of_modes=10000, # suggested in TurboGenPY paper
     spectra_name=spectra_name
     )
 
@@ -81,7 +81,7 @@ else:
     print("ERROR: Invalid spectra name. Aborting...")
     exit()
 
-x_file,y_file = np.loadtxt(output_directory+"velocity_equidistant_nodes_spectra.fld",skiprows=1,unpack=True)
+x_file,y_file = np.loadtxt(output_directory+"velocity_equidistant_nodes_spectra_no_smoothing.fld",skiprows=1,unpack=True)
 x.append(x_file);y.append(y_file);labels.append("Generated")
 qp.plotfxn(xdata=x,ydata=y,xlabel="Nondimensional Wavenumber, $k^{*}$",ylabel="Nondimensional TKE Spectra, $E^{*}(k^{*},t^{*})$",
             title_label=title_label,

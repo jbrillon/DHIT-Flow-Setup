@@ -123,7 +123,7 @@ def convert_equidistant_to_gauss_lobatto_nodes(
     coeff2[5-1,6-1] = +1.0000000000000000e0
 
     # safeguard
-    if(poly_degree>5):
+    if(poly_degree>5):# TO DO: up to at least p7
         print("ERROR: Convert equidistant to GLL nodes not implemented for poly_degree>5.")
         print("Please add quadrature weights/nodes for higher poly_degree and update this file.")
         print("Aborting...")

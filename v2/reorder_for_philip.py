@@ -1,6 +1,10 @@
 import numpy as np
 from var import *
 
+# IDEA: The code should generate the flow field and plot the spectra, then in bash, it prints, 
+# something like "saved spectra file", if satisfactory, type yes if you would like to 
+# generate the philip input files; then it could prompt for number of processors and generate the files
+
 # get padded mpi rank string -- TO DO: Put this function somewhere since its being copied to a few files
 def get_padded_mpi_rank_string(mpi_rank):
     padding_length = 5
@@ -115,7 +119,7 @@ def generate_philip_input_files(
     nondimensionalized_conservative_solution = np.zeros((nElements_per_direction,nElements_per_direction,nElements_per_direction,nQuadPoints_per_element,nQuadPoints_per_element,nQuadPoints_per_element,1,5),dtype=np.float64)
 
     file = open(output_dir+"/"+"read_test.dat","w")
-    # file.write('Number of degrees of freedom:\n') # leave uncommented or will have to update philip
+    # file.write('Number of degrees of freedom:\n') # leave uncommented or will have to update philip <-- reconcile this
     wstr = "%i\n" % nDOF
     file.write(wstr)
     i = 0
@@ -144,7 +148,7 @@ def generate_philip_input_files(
                             nondimensionalized_primitive_sol_at_q_point[0] = nondimensionalized_density
                             nondimensionalized_primitive_sol_at_q_point[4] = nondimensionalized_pressure
                             # - Nondimensionalized velocity components; add nondimensionalized mean velocity to x-component
-                            nondimensionalized_primitive_sol_at_q_point[1] = nondimensionalized_mean_velocity + stored_data[ez,ey,ex,qz,qy,qx,0,3] # TO DO: Confirm that TurboGenPY is indeed fluctuations!!
+                            nondimensionalized_primitive_sol_at_q_point[1] = nondimensionalized_mean_velocity + stored_data[ez,ey,ex,qz,qy,qx,0,3] # TO DO: Confirm that TurboGenPY is indeed fluctuations!! ? is this necessessary? 
                             nondimensionalized_primitive_sol_at_q_point[2] = stored_data[ez,ey,ex,qz,qy,qx,0,4]
                             nondimensionalized_primitive_sol_at_q_point[3] = stored_data[ez,ey,ex,qz,qy,qx,0,5]
 
@@ -166,14 +170,15 @@ def generate_philip_input_files(
     file.close()
     # NOTE: Do 'diff read_test.dat setup.dat' to make sure we're reading this properly
     # TO DO: The line above could be made a parameter like "test_reading" or something so that we can turn it on/off
+    # TO DO: execute a bash command here and if diff returns something abort; otherwise print a statement and delete the read_test.dat file
     #===========================================================
     #                 REORDER DATA FOR PHiLiP
     #===========================================================
 
     nDOF_per_proc = nDOF/num_procs
-    philip_prefix=output_dir+"/"+"setup_files/setup" # TO DO: create the directory within this python script
+    philip_prefix=output_dir+"/"+"setup_files/setup" # TO DO: create the directory within this python script !! -- bash command
 
-    # TO DO:
+    # TO DO: <-- add this
     # if(nDOF % nDOFs_per_proc != 0):
     #     print("ERROR: Must use a number of processors that evenly divides the domain ")
 
@@ -186,7 +191,7 @@ def generate_philip_input_files(
         currently can handle up to 32 (i.e. 2,4,8,16,32)
     '''
 
-    if(nElements_per_direction>32):
+    if(nElements_per_direction>32): # TO DO: Add more nested loops for at least 64 el per direction
         print("ERROR: Currently can only handle up to 32 elements per direction. ")
         print("Must add more nested for loops for higher number of elements per direction. ")
         print("Aborting...")
@@ -285,7 +290,7 @@ def generate_philip_input_files(
     file.close()
     # exit()
     # # ================================================================
-    # # check that it works
+    # # check that it works -- this is not necessary because PHiLiP checks the coordinates
     # # ================================================================
     # data_dir = "philip_outputs/"
     # # filename="1procs/coord_check_%i_elements_p%i-proc_0.txt" % (nElements_per_direction,poly_degree)
