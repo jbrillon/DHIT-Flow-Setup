@@ -1,4 +1,5 @@
 import numpy as np
+from tqdm import tqdm
 
 def convert_equidistant_to_gauss_lobatto_nodes(
     equidistant_data_filename,
@@ -21,21 +22,25 @@ def convert_equidistant_to_gauss_lobatto_nodes(
         exit()
 
     # load data at equidistant nodes
+    print("Loading data at equisdistant nodes for file:")
+    print(equidistant_data_filename)
     raw_data = np.loadtxt(equidistant_data_filename,skiprows=1,dtype=np.float64)
-
-    # Store the data
-    stored_data = np.zeros((nElements_per_direction,nElements_per_direction,nElements_per_direction,nQuadPoints_per_element,nQuadPoints_per_element,nQuadPoints_per_element,1,nValues_per_row),dtype=np.float64)
-    i = 0
-    for ez in range(0,nElements_per_direction):
-        for qz in range(0,nQuadPoints_per_element):
-            for ey in range(0,nElements_per_direction):
-                for qy in range(0,nQuadPoints_per_element):
-                    for ex in range(0,nElements_per_direction):
-                        for qx in range(0,nQuadPoints_per_element):
-                            row_data = raw_data[i,:]
-                            for iValue in range(0,nValues_per_row):
-                                stored_data[ez,ey,ex,qz,qy,qx,0,iValue] = row_data[iValue]
-                            i += 1
+    print("done.")
+    print(" ")
+    # commented below because it is not used
+    # # Store the data
+    # stored_data = np.zeros((nElements_per_direction,nElements_per_direction,nElements_per_direction,nQuadPoints_per_element,nQuadPoints_per_element,nQuadPoints_per_element,1,nValues_per_row),dtype=np.float64)
+    # i = 0
+    # for ez in range(0,nElements_per_direction):
+    #     for qz in range(0,nQuadPoints_per_element):
+    #         for ey in range(0,nElements_per_direction):
+    #             for qy in range(0,nQuadPoints_per_element):
+    #                 for ex in range(0,nElements_per_direction):
+    #                     for qx in range(0,nQuadPoints_per_element):
+    #                         row_data = raw_data[i,:]
+    #                         for iValue in range(0,nValues_per_row):
+    #                             stored_data[ez,ey,ex,qz,qy,qx,0,iValue] = row_data[iValue]
+    #                         i += 1
 
     # FROM WRITE FLD
     ng = 1*nElements_per_direction*nQuadPoints_per_element
@@ -75,56 +80,100 @@ def convert_equidistant_to_gauss_lobatto_nodes(
     #======================================================
     # Generate Grid
     #======================================================
-
+    max_poly_degree = 7 # maximum polynomial degree this code currently works for
     # CARTESIAN GRIDPOINTS
-    coeff1 = np.zeros((5,6),dtype=np.float64)
+    coeff1 = np.zeros((max_poly_degree,max_poly_degree+1),dtype=np.float64)
+    # P1
     coeff1[1-1,1-1] = -1.0000000000000000e0
     coeff1[1-1,2-1] = +1.0000000000000000e0
+    # P2
     coeff1[2-1,1-1] = -1.0000000000000000e0
     coeff1[2-1,2-1] = +0.0000000000000000e0
     coeff1[2-1,3-1] = +1.0000000000000000e0
+    # P3
     coeff1[3-1,1-1] = -1.0000000000000000e0
     coeff1[3-1,2-1] = -4.47213595499957939e-1
     coeff1[3-1,3-1] = +4.47213595499957939e-1
     coeff1[3-1,4-1] = +1.0000000000000000e0
+    # P4
     coeff1[4-1,1-1] = -1.0000000000000000e0
     coeff1[4-1,2-1] = -6.54653670707977144e-1
     coeff1[4-1,3-1] = +0.0000000000000000e0
     coeff1[4-1,4-1] = +6.54653670707977144e-1
     coeff1[4-1,5-1] = +1.0000000000000000e0
+    # P5
     coeff1[5-1,1-1] = -1.0000000000000000e0
     coeff1[5-1,2-1] = -7.6505532392946469e-1
     coeff1[5-1,3-1] = -2.85231516480645096e-1
     coeff1[5-1,4-1] = +2.85231516480645096e-1
     coeff1[5-1,5-1] = +7.6505532392946469e-1
     coeff1[5-1,6-1] = +1.0000000000000000e0
+    # P6
+    coeff1[6-1,1-1] = -1.0000000000000000e0
+    coeff1[6-1,2-1] = -8.3022389627856696e-1
+    coeff1[6-1,3-1] = -4.6884879347071423e-1
+    coeff1[6-1,4-1] = +0.0000000000000000e0
+    coeff1[6-1,5-1] = +4.6884879347071423e-1
+    coeff1[6-1,6-1] = +8.3022389627856696e-1
+    coeff1[6-1,7-1] = +1.0000000000000000e0
+    # P7
+    coeff1[7-1,1-1] = -1.0000000000000000e0
+    coeff1[7-1,2-1] = -8.7174014850960668e-1
+    coeff1[7-1,3-1] = -5.9170018143314229e-1
+    coeff1[7-1,4-1] = -2.0929921790247885e-1
+    coeff1[7-1,5-1] = +2.0929921790247885e-1
+    coeff1[7-1,6-1] = +5.9170018143314229e-1
+    coeff1[7-1,7-1] = +8.7174014850960668e-1
+    coeff1[7-1,8-1] = +1.0000000000000000e0
 
     # OUTPUT GRIDPOINTS
-    coeff2 = np.zeros((5,6),dtype=np.float64)
+    coeff2 = np.zeros((max_poly_degree,max_poly_degree+1),dtype=np.float64)
+    # P1
     coeff2[1-1,1-1] = -1.0000000000000000e0
     coeff2[1-1,2-1] = +1.0000000000000000e0
+    # P2
     coeff2[2-1,1-1] = -1.0000000000000000e0
     coeff2[2-1,2-1] = +0.0000000000000000e0
     coeff2[2-1,3-1] = +1.0000000000000000e0
+    # P3
     coeff2[3-1,1-1] = -1.0000000000000000e0
     coeff2[3-1,2-1] = -3.3333333333333333e-1
     coeff2[3-1,3-1] = +3.3333333333333333e-1
     coeff2[3-1,4-1] = +1.0000000000000000e0
+    # P4
     coeff2[4-1,1-1] = -1.0000000000000000e0
     coeff2[4-1,2-1] = -5.0000000000000000e-1
     coeff2[4-1,3-1] = +0.0000000000000000e0
     coeff2[4-1,4-1] = +5.0000000000000000e-1
     coeff2[4-1,5-1] = +1.0000000000000000e0
+    # P5
     coeff2[5-1,1-1] = -1.0000000000000000e0
     coeff2[5-1,2-1] = -6.0000000000000000e-1
     coeff2[5-1,3-1] = -2.0000000000000000e-1
     coeff2[5-1,4-1] = +2.0000000000000000e-1
     coeff2[5-1,5-1] = +6.0000000000000000e-1
     coeff2[5-1,6-1] = +1.0000000000000000e0
+    # P6
+    coeff2[6-1,1-1] = -1.0000000000000000e0
+    coeff2[6-1,2-1] = -6.6666666666666667e-1
+    coeff2[6-1,3-1] = -3.3333333333333333e-1
+    coeff2[6-1,4-1] = +0.0000000000000000e0
+    coeff2[6-1,5-1] = +3.3333333333333333e-1
+    coeff2[6-1,6-1] = +6.6666666666666667e-1
+    coeff2[6-1,7-1] = +1.0000000000000000e0
+    # P7
+    coeff2[7-1,1-1] = -1.0000000000000000e0
+    coeff2[7-1,2-1] = -7.1428571428571430e-1
+    coeff2[7-1,3-1] = -4.2857142857142860e-1
+    coeff2[7-1,4-1] = -1.4285714285714290e-1
+    coeff2[7-1,5-1] = +1.4285714285714290e-1
+    coeff2[7-1,6-1] = +4.2857142857142860e-1
+    coeff2[7-1,7-1] = +7.1428571428571430e-1
+    coeff2[7-1,8-1] = +1.0000000000000000e0
 
     # safeguard
-    if(poly_degree>5):# TO DO: up to at least p7
-        print("ERROR: Convert equidistant to GLL nodes not implemented for poly_degree>5.")
+    if(poly_degree>max_poly_degree):
+        print("ERROR: Convert equidistant to GLL nodes not implemented for poly_degree>%i." % max_poly_degree)
         print("Please add quadrature weights/nodes for higher poly_degree and update this file.")
         print("Aborting...")
         exit()
@@ -155,7 +204,8 @@ def convert_equidistant_to_gauss_lobatto_nodes(
     if(test_reading):
         file = open("test_reading_equidistant_to_gl_nodes.txt","w") # for testing
         i_check = 0 # for testing
-
+    print("Converting to Gauss-Lobatto nodes.")
+    print("(1/3) Storing the GL nodes and solution points...")
     p = 1*poly_degree-1 # minus one because of indexing
     for k in range(Nk1-1, Nk3):
         for j in range(Nj1-1, Nj3):
@@ -201,6 +251,9 @@ def convert_equidistant_to_gauss_lobatto_nodes(
     if(test_reading):
         file.close()
 
+    print("done.")
+    print("(2/3) Converting velocity to GL nodes...")
+    i_global = 0
     #======================================================
     # Generate velocity at GL nodes
     #======================================================
@@ -220,9 +273,9 @@ def convert_equidistant_to_gauss_lobatto_nodes(
 
     dh = 2.0*np.pi/np.float64(ne)
 
-    for k in range(Nk1-1, Nk3):
-        for j in range(Nj1-1, Nj3):
-            for i in range(Ni1-1, Ni3):
+    for k in tqdm(range(Nk1-1, Nk3)):
+        for j in tqdm(range(Nj1-1, Nj3),leave=False):
+            for i in tqdm(range(Ni1-1, Ni3),leave=False):
                 for l in range(1-1, pp):
                     for m in range(1-1, pp):
                         for n in range(1-1, pp):
@@ -298,7 +351,10 @@ def convert_equidistant_to_gauss_lobatto_nodes(
                                         Vel2[indi,indj,indk,0] = Vel2[indi,indj,indk,0] + wx*wy*wz*U2
                                         Vel2[indi,indj,indk,1] = Vel2[indi,indj,indk,1] + wx*wy*wz*V2
                                         Vel2[indi,indj,indk,2] = Vel2[indi,indj,indk,2] + wx*wy*wz*W2
+                            # Print progress
 
+    print("done.")
+    print("(3/3) Writting output file: %s" % output_filename)
     # WRITE TO FILE
     file = open(output_filename,"w")
     wstr = "%i\n" % nDOF
@@ -309,6 +365,7 @@ def convert_equidistant_to_gauss_lobatto_nodes(
                 wstr = " %18.16e %18.16e %18.16e %18.16e %18.16e %18.16e\n" % (Xs[i,j,k],Ys[i,j,k],Zs[i,j,k],Vel2[i,j,k,0],Vel2[i,j,k,1],Vel2[i,j,k,2])
                 file.write(wstr)
     file.close()
+    print("done.")
     return
 
 # # ================================================================
