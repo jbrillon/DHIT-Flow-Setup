@@ -1,6 +1,6 @@
 import numpy as np
-from var import *
-
+# from var import *
+import os
 # IDEA: The code should generate the flow field and plot the spectra, then in bash, it prints, 
 # something like "saved spectra file", if satisfactory, type yes if you would like to 
 # generate the philip input files; then it could prompt for number of processors and generate the files
@@ -23,17 +23,6 @@ def get_conservative_from_primitive(primitive_soln):
     conservative_soln[1:4] = density*velocity
     conservative_soln[4] = pressure/(gamma_gas_minus_one) + 0.5*density*np.dot(velocity,velocity)
     return conservative_soln
-
-def compute_mach_number(primitive_soln):
-    global gamma_gas_minus_one
-    density = 1.0*primitive_soln[0]
-    velocity = 1.0*primitive_soln[1:4]
-    pressure = 1.0*primitive_soln[4]
-
-    speed_of_sound = np.sqrt(gamma_gas*pressure/density)
-    velocity_magnitude = np.sqrt(velocity[0]*velocity[0] + velocity[1]*velocity[1] + velocity[2]*velocity[2])
-    mach_number = velocity_magnitude/speed_of_sound
-    return mach_number
 
 # Global constants
 global gamma_gas, gamma_gas_minus_one
@@ -72,14 +61,14 @@ def generate_philip_input_files(
     gamma_gas = 1.4
     gamma_gas_minus_one = gamma_gas - 1.0
     #-----------------------------------------------------
-    maximum_desired_turbulent_mach_number = 0.3
 
     print(" ")
     print("----------------------------------------------------------------------------")
     print("Nondimensionalized quantities for initializing the flow:")
     print("----------------------------------------------------------------------------")
-    temperature, prandtl_number, reynolds_number_ref, mach_number_ref, nondim_density, nondim_mean_velocity, nondim_pressure = \
-        np.loadtxt(flow_parameters_file,dtype=np.float64,unpack=True)
+    nondim_density = 1.0
+    nondim_mean_velocity = 0.0
+    nondim_pressure = 1.0
     nondimensionalized_pressure = 1.0*nondim_pressure
     nondimensionalized_density = 1.0*nondim_density
     nondimensionalized_mean_velocity = 1.0*nondim_mean_velocity
@@ -151,15 +140,6 @@ def generate_philip_input_files(
                             nondimensionalized_primitive_sol_at_q_point[2] = stored_data[ez,ey,ex,qz,qy,qx,0,4]
                             nondimensionalized_primitive_sol_at_q_point[3] = stored_data[ez,ey,ex,qz,qy,qx,0,5]
 
-                            # Check turbulent mach number -- may want to remove this
-                            mach_number_at_q_point = compute_mach_number(nondimensionalized_primitive_sol_at_q_point)
-                            if(mach_number_at_q_point > maximum_desired_turbulent_mach_number):
-                                print("Error: a local mach_number exceeds the maximum_desired_turbulent_mach_number")
-                                print("Value: %.3e" % mach_number_at_q_point)
-                                print("Aborting...")
-                                exit()
-
-
                             # Conservative solution at current point
                             nondimensionalized_conservative_sol_at_q_point = 1.0*get_conservative_from_primitive(nondimensionalized_primitive_sol_at_q_point)
                             # Store conservative solution
@@ -167,6 +147,7 @@ def generate_philip_input_files(
                                 nondimensionalized_conservative_solution[ez,ey,ex,qz,qy,qx,0,state] = 1.0*nondimensionalized_conservative_sol_at_q_point[state]
                             # ------------------------------- END --------------------------------
     file.close()
+    # os.diff("read_test.dat setup.dat")
     # NOTE: Do 'diff read_test.dat setup.dat' to make sure we're reading this properly
     # TO DO: The line above could be made a parameter like "test_reading" or something so that we can turn it on/off
     # TO DO: execute a bash command here and if diff returns something abort; otherwise print a statement and delete the read_test.dat file
@@ -175,6 +156,9 @@ def generate_philip_input_files(
     #===========================================================
 
     nDOF_per_proc = nDOF/num_procs
+    # TO DO: UPDATE THIS HERE / PARAMETERIZE ITs
+    if(os.path.isdir(output_dir+"/"+"setup_files")==False):
+        os.mkdir(output_dir+"/"+"setup_files")
     philip_prefix=output_dir+"/"+"setup_files/setup" # TO DO: create the directory within this python script !! -- bash command
 
     # TO DO: <-- add this
